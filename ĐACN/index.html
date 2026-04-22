@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <title>ParkFinder Admin – Quản lý bãi xe</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="sidebar">
+    <!-- Header -->
+    <div class="sidebar-header">
+        <div class="brand">Park<span>Finder</span></div>
+        <div class="admin-tag">Admin</div>
+    </div>
+
+    <!-- Stats mini -->
+    <div class="mini-stats">
+        <div class="mini-stat">
+            <div class="ms-val" id="statTotal">—</div>
+            <div class="ms-lbl">Tổng bãi</div>
+        </div>
+        <div class="mini-stat available">
+            <div class="ms-val" id="statAvail">—</div>
+            <div class="ms-lbl">Còn chỗ</div>
+        </div>
+        <div class="mini-stat full">
+            <div class="ms-val" id="statFull">—</div>
+            <div class="ms-lbl">Đầy chỗ</div>
+        </div>
+    </div>
+
+    <div class="section-divider">➕ Thêm bãi xe mới</div>
+
+    <div class="input-group">
+        <label for="parkName">Tên bãi giữ xe</label>
+        <div class="input-wrap">
+            <span class="i-icon">🅿️</span>
+            <input type="text" id="parkName" placeholder="VD: Bãi xe Quận 10">
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label for="coordsDisplay">Tọa độ (click bản đồ để chọn)</label>
+        <div class="input-wrap">
+            <span class="i-icon">📍</span>
+            <input type="text" id="coordsDisplay" readonly placeholder="Chưa chọn vị trí">
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label for="parkStatus">Trạng thái mặc định</label>
+        <select id="parkStatus">
+            <option value="available">✅ Còn chỗ</option>
+            <option value="full">❌ Đầy chỗ</option>
+        </select>
+    </div>
+
+    <button id="btnSave" onclick="saveParking()">💾 Lưu bãi xe mới</button>
+
+    <div class="action-btns">
+        <button class="btn-dashboard" onclick="window.location.href='dashboard.html'">📊 Thống kê doanh thu</button>
+        <button class="btn-logout" onclick="logout()">🚪 Đăng xuất</button>
+    </div>
+
+    <div class="section-divider" style="margin-top:16px">📋 Danh sách đặt chỗ <span id="bookingCount" class="badge">0</span></div>
+    <div class="booking-table-wrap">
+        <table id="bookingTable">
+            <thead>
+                <tr><th>Khách hàng</th><th>Bãi xe</th><th>Hành động</th></tr>
+            </thead>
+            <tbody id="bookingTableBody">
+                <tr><td colspan="3" style="color:#94a3b8;text-align:center;padding:20px">Đang tải...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="map"></div>
+
+<script src="script.js"></script>
+</body>
+</html>

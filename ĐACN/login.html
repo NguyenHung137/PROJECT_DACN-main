@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkFinder – Đăng nhập</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy:   #0A1628;
+            --blue:   #2563EB;
+            --blue2:  #3B82F6;
+            --orange: #F97316;
+            --green:  #10B981;
+            --red:    #EF4444;
+            --light:  #F8FAFC;
+            --text:   #1E293B;
+            --muted:  #64748B;
+            --border: #E2E8F0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            background: var(--light);
+            overflow: hidden;
+        }
+
+        /* ─── LEFT PANEL ─── */
+        .left-panel {
+            width: 480px; min-height: 100vh;
+            background: var(--navy);
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 60px 50px;
+            flex-shrink: 0;
+        }
+        .left-bg {
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse 80% 70% at 30% 40%, rgba(37,99,235,0.4), transparent 70%),
+                        radial-gradient(ellipse 50% 60% at 80% 80%, rgba(249,115,22,0.2), transparent 60%);
+        }
+        .left-grid {
+            position: absolute; inset: 0; opacity: 0.06;
+            background-image: linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridPan 20s linear infinite;
+        }
+        @keyframes gridPan { from { transform: translate(0,0); } to { transform: translate(50px,50px); } }
+        .left-content { position: relative; z-index: 2; text-align: center; }
+        .brand-logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 36px; font-weight: 900;
+            color: #fff; letter-spacing: -1px;
+            margin-bottom: 8px;
+        }
+        .brand-logo span { color: var(--orange); }
+        .brand-tagline { color: rgba(255,255,255,0.55); font-size: 15px; margin-bottom: 50px; }
+
+        /* Animated map visual */
+        .map-visual {
+            width: 280px; height: 200px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 20px; margin: 0 auto 40px;
+            position: relative; overflow: hidden;
+        }
+        .map-visual::before {
+            content: '';
+            position: absolute; inset: 0;
+            background-image: linear-gradient(rgba(59,130,246,.1) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(59,130,246,.1) 1px, transparent 1px);
+            background-size: 35px 35px;
+        }
+        .v-road { position: absolute; background: rgba(255,255,255,0.07); }
+        .vr1 { width: 100%; height: 2px; top: 40%; }
+        .vr2 { width: 2px; height: 100%; left: 45%; }
+        .v-pin {
+            position: absolute; width: 26px; height: 32px;
+            animation: floatPin 3.5s ease-in-out infinite;
+        }
+        @keyframes floatPin { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .vp1 { top: 20%; left: 25%; animation-delay: 0s; }
+        .vp2 { top: 55%; left: 60%; animation-delay: 1s; }
+        .vp3 { top: 25%; left: 65%; animation-delay: 2s; }
+        .pin-circle {
+            width: 26px; height: 26px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: bold; color: white;
+        }
+        .pc-green { background: #10B981; box-shadow: 0 0 10px rgba(16,185,129,0.5); }
+        .pc-red   { background: #EF4444; box-shadow: 0 0 10px rgba(239,68,68,0.5); }
+        .pc-orange{ background: #F97316; box-shadow: 0 0 10px rgba(249,115,22,0.5); }
+
+        .features-list { text-align: left; }
+        .feat-item {
+            display: flex; align-items: center; gap: 12px;
+            color: rgba(255,255,255,0.7); font-size: 14px;
+            padding: 8px 0;
+        }
+        .feat-icon-sm {
+            width: 30px; height: 30px; border-radius: 8px;
+            background: rgba(255,255,255,0.08);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; flex-shrink: 0;
+        }
+
+        .left-footer {
+            position: absolute; bottom: 30px;
+            color: rgba(255,255,255,0.3); font-size: 12px;
+        }
+
+        /* ─── RIGHT PANEL ─── */
+        .right-panel {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            padding: 40px 30px;
+        }
+        .auth-box {
+            width: 100%; max-width: 460px;
+            background: white; border-radius: 24px;
+            padding: 48px;
+            box-shadow: 0 20px 60px rgba(10,22,40,0.1);
+            border: 1px solid var(--border);
+        }
+
+        /* ─── MODE SWITCH (User / Admin) ─── */
+        .mode-switch {
+            display: flex; background: var(--light);
+            border-radius: 12px; padding: 4px;
+            margin-bottom: 36px;
+        }
+        .mode-btn {
+            flex: 1; padding: 10px 16px;
+            border: none; border-radius: 9px;
+            background: transparent; cursor: pointer;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: 14px; font-weight: 600;
+            color: var(--muted);
+            transition: all .25s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .mode-btn.active {
+            background: white; color: var(--navy);
+            box-shadow: 0 2px 8px rgba(10,22,40,0.1);
+        }
+
+        /* ─── TAB SWITCH (Login / Register) ─── */
+        .tab-bar {
+            display: flex; gap: 0;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 32px;
+        }
+        .tab-btn {
+            flex: 1; padding: 12px 0; text-align: center;
+            border: none; background: transparent; cursor: pointer;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: 15px; font-weight: 600;
+            color: var(--muted);
+            position: relative; transition: color .2s;
+        }
+        .tab-btn::after {
+            content: '';
+            position: absolute; bottom: -2px; left: 0; right: 0; height: 2px;
+            background: var(--blue);
+            transform: scaleX(0); transition: transform .25s ease;
+        }
+        .tab-btn.active { color: var(--navy); }
+        .tab-btn.active::after { transform: scaleX(1); }
+
+        /* ─── FORMS ─── */
+        .form-wrapper {
+            position: relative; overflow: hidden;
+        }
+        .form-panel {
+            transition: all .35s cubic-bezier(.4,0,.2,1);
+        }
+        .form-panel.hidden-left  { transform: translateX(-60px); opacity: 0; position: absolute; pointer-events: none; }
+        .form-panel.hidden-right { transform: translateX(60px);  opacity: 0; position: absolute; pointer-events: none; }
+
+        .form-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 26px; font-weight: 800;
+            color: var(--navy); margin-bottom: 6px;
+        }
+        .form-sub { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+
+        .input-group { margin-bottom: 18px; }
+        .input-group label {
+            display: block; font-size: 13px; font-weight: 600;
+            color: var(--text); margin-bottom: 7px;
+        }
+        .input-wrap {
+            position: relative;
+        }
+        .input-icon {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            font-size: 16px; opacity: 0.5;
+        }
+        .form-input {
+            width: 100%; padding: 12px 14px 12px 42px;
+            border: 1.5px solid var(--border); border-radius: 10px;
+            font-family: 'Be Vietnam Pro', sans-serif; font-size: 15px;
+            color: var(--text); background: var(--light);
+            transition: all .2s; outline: none;
+        }
+        .form-input:focus {
+            border-color: var(--blue);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(37,99,235,0.08);
+        }
+        .form-input.error { border-color: var(--red); box-shadow: 0 0 0 4px rgba(239,68,68,0.08); }
+        .toggle-pw {
+            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+            cursor: pointer; font-size: 16px; opacity: 0.5;
+            border: none; background: none; padding: 0;
+            transition: opacity .2s;
+        }
+        .toggle-pw:hover { opacity: 1; }
+        .error-msg {
+            color: var(--red); font-size: 12px; margin-top: 5px;
+            display: none; animation: fadeIn .2s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+        .error-msg.show { display: block; }
+
+        .btn-submit {
+            width: 100%; padding: 14px;
+            background: var(--blue); color: white;
+            border: none; border-radius: 12px;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: 16px; font-weight: 700;
+            cursor: pointer; transition: all .25s;
+            position: relative; overflow: hidden;
+            margin-top: 8px;
+        }
+        .btn-submit:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(37,99,235,0.35); }
+        .btn-submit:active { transform: translateY(0); }
+        .btn-submit.loading { pointer-events: none; opacity: 0.8; }
+        .btn-submit .spinner {
+            display: none; width: 18px; height: 18px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-top-color: white; border-radius: 50%;
+            animation: spin .6s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .btn-submit.loading .btn-text { display: none; }
+        .btn-submit.loading .spinner { display: block; }
+
+        /* Admin button different color */
+        .admin-mode .btn-submit { background: var(--navy); }
+        .admin-mode .btn-submit:hover { background: #162035; box-shadow: 0 8px 24px rgba(10,22,40,0.35); }
+        .admin-mode .tab-btn.active::after { background: var(--orange); }
+        .admin-mode .form-input:focus { border-color: var(--orange); box-shadow: 0 0 0 4px rgba(249,115,22,0.08); }
+        .admin-mode .mode-btn.active { color: var(--orange); }
+
+        .divider {
+            display: flex; align-items: center; gap: 14px;
+            margin: 20px 0; color: var(--muted); font-size: 13px;
+        }
+        .divider::before, .divider::after {
+            content: ''; flex: 1; height: 1px; background: var(--border);
+        }
+
+        .back-home {
+            text-align: center; margin-top: 24px;
+            font-size: 13px; color: var(--muted);
+        }
+        .back-home a { color: var(--blue); text-decoration: none; font-weight: 600; }
+        .back-home a:hover { text-decoration: underline; }
+
+        /* ─── TOAST ─── */
+        .toast {
+            position: fixed; bottom: 30px; right: 30px;
+            padding: 14px 20px; border-radius: 12px;
+            color: white; font-size: 14px; font-weight: 600;
+            display: flex; align-items: center; gap: 10px;
+            transform: translateY(80px); opacity: 0;
+            transition: all .35s cubic-bezier(.4,0,.2,1);
+            z-index: 1000; max-width: 320px;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: var(--green); }
+        .toast.error   { background: var(--red); }
+
+        /* ─── ADMIN BADGE ─── */
+        .admin-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(249,115,22,0.1);
+            border: 1px solid rgba(249,115,22,0.3);
+            color: var(--orange); padding: 4px 12px;
+            border-radius: 50px; font-size: 12px; font-weight: 700;
+            margin-bottom: 16px; display: none;
+        }
+        .admin-mode .admin-badge { display: inline-flex; }
+
+        @media (max-width: 768px) {
+            .left-panel { display: none; }
+            .right-panel { padding: 24px 20px; background: white; }
+            .auth-box { padding: 32px 24px; box-shadow: none; border: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- LEFT PANEL -->
+<div class="left-panel">
+    <div class="left-bg"></div>
+    <div class="left-grid"></div>
+    <div class="left-content">
+        <div class="brand-logo">Park<span>Finder</span></div>
+        <div class="brand-tagline">Hệ thống tìm bãi xe thông minh</div>
+        <div class="map-visual">
+            <div class="v-road vr1"></div>
+            <div class="v-road vr2"></div>
+            <div class="v-pin vp1"><div class="pin-circle pc-green">P</div></div>
+            <div class="v-pin vp2"><div class="pin-circle pc-red">P</div></div>
+            <div class="v-pin vp3"><div class="pin-circle pc-orange">P</div></div>
+        </div>
+        <div class="features-list">
+            <div class="feat-item"><div class="feat-icon-sm">🗺️</div>Bản đồ thời gian thực với Mapbox</div>
+            <div class="feat-item"><div class="feat-icon-sm">🔮</div>Dự báo AI — Logistic Regression</div>
+            <div class="feat-item"><div class="feat-icon-sm">⚡</div>Đặt chỗ chỉ trong vài giây</div>
+            <div class="feat-item"><div class="feat-icon-sm">📊</div>Báo cáo doanh thu thời gian thực</div>
+        </div>
+    </div>
+    <div class="left-footer">© 2026 ParkFinder — Đồ án chuyên ngành</div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="right-panel">
+    <div class="auth-box" id="authBox">
+
+        <!-- Mode Switch -->
+        <div class="mode-switch">
+            <button class="mode-btn active" id="modUser" onclick="setMode('user')">🚗 Người dùng</button>
+            <button class="mode-btn" id="modAdmin" onclick="setMode('admin')">⚙️ Quản trị</button>
+        </div>
+
+        <!-- Admin Badge -->
+        <div class="admin-badge" id="adminBadge">🔐 Chế độ Quản trị viên</div>
+
+        <!-- Tab Bar -->
+        <div class="tab-bar" id="tabBar">
+            <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">Đăng nhập</button>
+            <button class="tab-btn" id="tabReg" onclick="switchTab('register')">Đăng ký</button>
+        </div>
+
+        <div class="form-wrapper" id="formWrapper">
+            <!-- LOGIN FORM -->
+            <div class="form-panel" id="loginPanel">
+                <div class="form-title" id="loginTitle">Chào mừng trở lại 👋</div>
+                <div class="form-sub" id="loginSub">Đăng nhập để tiếp tục tìm bãi xe</div>
+                <div class="input-group">
+                    <label>Tên đăng nhập</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">👤</span>
+                        <input type="text" class="form-input" id="loginUser" placeholder="Nhập tên đăng nhập" autocomplete="username">
+                    </div>
+                    <div class="error-msg" id="errLoginUser">Vui lòng nhập tên đăng nhập</div>
+                </div>
+                <div class="input-group">
+                    <label>Mật khẩu</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">🔑</span>
+                        <input type="password" class="form-input" id="loginPass" placeholder="Nhập mật khẩu" autocomplete="current-password">
+                        <button class="toggle-pw" onclick="togglePw('loginPass', this)">👁️</button>
+                    </div>
+                    <div class="error-msg" id="errLoginPass">Vui lòng nhập mật khẩu</div>
+                </div>
+                <button class="btn-submit" id="btnLogin" onclick="doLogin()">
+                    <span class="btn-text">Đăng nhập</span>
+                    <div class="spinner"></div>
+                </button>
+                <div class="divider">hoặc</div>
+                <div style="text-align:center; font-size:14px; color:var(--muted)">
+                    Chưa có tài khoản? <a href="#" onclick="switchTab('register')" style="color:var(--blue);font-weight:600;text-decoration:none">Đăng ký ngay</a>
+                </div>
+            </div>
+
+            <!-- REGISTER FORM -->
+            <div class="form-panel hidden-right" id="registerPanel">
+                <div class="form-title">Tạo tài khoản mới ✨</div>
+                <div class="form-sub">Đăng ký miễn phí, dùng ngay</div>
+                <div class="input-group">
+                    <label>Họ và tên</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">😊</span>
+                        <input type="text" class="form-input" id="regName" placeholder="Nguyễn Văn A">
+                    </div>
+                    <div class="error-msg" id="errRegName">Vui lòng nhập họ tên</div>
+                </div>
+                <div class="input-group">
+                    <label>Tên đăng nhập</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">👤</span>
+                        <input type="text" class="form-input" id="regUser" placeholder="vd: nguyenvana123">
+                    </div>
+                    <div class="error-msg" id="errRegUser">Tên đăng nhập tối thiểu 4 ký tự</div>
+                </div>
+                <div class="input-group">
+                    <label>Số điện thoại (tùy chọn)</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">📱</span>
+                        <input type="tel" class="form-input" id="regPhone" placeholder="0901234567">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Mật khẩu</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">🔑</span>
+                        <input type="password" class="form-input" id="regPass" placeholder="Tối thiểu 6 ký tự">
+                        <button class="toggle-pw" onclick="togglePw('regPass', this)">👁️</button>
+                    </div>
+                    <div class="error-msg" id="errRegPass">Mật khẩu tối thiểu 6 ký tự</div>
+                </div>
+                <div class="input-group">
+                    <label>Xác nhận mật khẩu</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">🔒</span>
+                        <input type="password" class="form-input" id="regPassConfirm" placeholder="Nhập lại mật khẩu">
+                        <button class="toggle-pw" onclick="togglePw('regPassConfirm', this)">👁️</button>
+                    </div>
+                    <div class="error-msg" id="errRegConfirm">Mật khẩu không khớp</div>
+                </div>
+                <button class="btn-submit" id="btnRegister" onclick="doRegister()">
+                    <span class="btn-text">Tạo tài khoản</span>
+                    <div class="spinner"></div>
+                </button>
+                <div class="divider">hoặc</div>
+                <div style="text-align:center; font-size:14px; color:var(--muted)">
+                    Đã có tài khoản? <a href="#" onclick="switchTab('login')" style="color:var(--blue);font-weight:600;text-decoration:none">Đăng nhập</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="back-home">
+            <a href="landing.html">← Quay về trang chủ</a>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+    let currentMode = 'user';
+    let currentTab = 'login';
+
+    // ─── INIT ───
+    window.onload = () => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('role') === 'admin') setMode('admin');
+    };
+
+    // ─── MODE SWITCH ───
+    function setMode(mode) {
+        currentMode = mode;
+        const box = document.getElementById('authBox');
+        const adminBadge = document.getElementById('adminBadge');
+        const tabBar = document.getElementById('tabBar');
+        const loginTitle = document.getElementById('loginTitle');
+        const loginSub = document.getElementById('loginSub');
+
+        if (mode === 'admin') {
+            box.classList.add('admin-mode');
+            adminBadge.style.display = 'inline-flex';
+            tabBar.style.display = 'none'; // Admin chỉ có login
+            switchTab('login');
+            loginTitle.textContent = 'Đăng nhập Quản trị 🔐';
+            loginSub.textContent = 'Chỉ dành cho quản trị viên ParkFinder';
+            document.getElementById('modAdmin').classList.add('active');
+            document.getElementById('modUser').classList.remove('active');
+        } else {
+            box.classList.remove('admin-mode');
+            adminBadge.style.display = 'none';
+            tabBar.style.display = 'flex';
+            loginTitle.textContent = 'Chào mừng trở lại 👋';
+            loginSub.textContent = 'Đăng nhập để tiếp tục tìm bãi xe';
+            document.getElementById('modUser').classList.add('active');
+            document.getElementById('modAdmin').classList.remove('active');
+        }
+    }
+
+    // ─── TAB SWITCH ───
+    function switchTab(tab) {
+        currentTab = tab;
+        const loginPanel = document.getElementById('loginPanel');
+        const registerPanel = document.getElementById('registerPanel');
+        const wrapper = document.getElementById('formWrapper');
+
+        if (tab === 'login') {
+            document.getElementById('tabLogin').classList.add('active');
+            document.getElementById('tabReg').classList.remove('active');
+            loginPanel.className = 'form-panel';
+            registerPanel.className = 'form-panel hidden-right';
+            wrapper.style.height = loginPanel.offsetHeight + 'px';
+        } else {
+            document.getElementById('tabLogin').classList.remove('active');
+            document.getElementById('tabReg').classList.add('active');
+            loginPanel.className = 'form-panel hidden-left';
+            registerPanel.className = 'form-panel';
+            wrapper.style.height = registerPanel.offsetHeight + 'px';
+        }
+    }
+
+    // Auto-height on init
+    setTimeout(() => {
+        const wrapper = document.getElementById('formWrapper');
+        wrapper.style.height = document.getElementById('loginPanel').offsetHeight + 'px';
+    }, 100);
+
+    // ─── TOGGLE PASSWORD ───
+    function togglePw(inputId, btn) {
+        const input = document.getElementById(inputId);
+        input.type = input.type === 'password' ? 'text' : 'password';
+        btn.textContent = input.type === 'password' ? '👁️' : '🙈';
+    }
+
+    // ─── VALIDATION ───
+    function setError(inputId, errId, show) {
+        const input = document.getElementById(inputId);
+        const err = document.getElementById(errId);
+        if (show) {
+            input.classList.add('error');
+            err.classList.add('show');
+        } else {
+            input.classList.remove('error');
+            err.classList.remove('show');
+        }
+        return !show;
+    }
+
+    // ─── TOAST ───
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        toast.textContent = (type === 'success' ? '✅ ' : '❌ ') + message;
+        toast.className = `toast ${type} show`;
+        setTimeout(() => { toast.classList.remove('show'); }, 3500);
+    }
+
+    // ─── LOGIN ───
+    async function doLogin() {
+        const user = document.getElementById('loginUser').value.trim();
+        const pass = document.getElementById('loginPass').value;
+
+        let ok = true;
+        ok = setError('loginUser', 'errLoginUser', !user) && ok;
+        ok = setError('loginPass', 'errLoginPass', !pass) && ok;
+        if (!ok) return;
+
+        const btn = document.getElementById('btnLogin');
+        btn.classList.add('loading');
+
+        try {
+            if (currentMode === 'admin') {
+                // Admin login (existing endpoint)
+                const res = await fetch(`http://localhost:8080/api/admin/login?user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}`);
+                const ok = await res.json();
+                if (ok) {
+                    sessionStorage.setItem('adminLoggedIn', 'true');
+                    sessionStorage.setItem('adminName', user);
+                    showToast('Đăng nhập thành công! Đang chuyển trang...');
+                    setTimeout(() => window.location.href = 'index.html', 1000);
+                } else {
+                    showToast('Sai tài khoản hoặc mật khẩu!', 'error');
+                }
+            } else {
+                // User login
+                const res = await fetch('http://localhost:8080/api/user/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    sessionStorage.setItem('userLoggedIn', 'true');
+                    sessionStorage.setItem('userName', data.fullName || user);
+                    sessionStorage.setItem('userId', data.id || '');
+                    showToast('Đăng nhập thành công! Đang chuyển trang...');
+                    setTimeout(() => window.location.href = 'user.html', 1000);
+                } else {
+                    showToast(data.message || 'Sai tài khoản hoặc mật khẩu!', 'error');
+                }
+            }
+        } catch (err) {
+            showToast('Không thể kết nối máy chủ. Vui lòng thử lại!', 'error');
+        } finally {
+            btn.classList.remove('loading');
+        }
+    }
+
+    // ─── REGISTER ───
+    async function doRegister() {
+        const name = document.getElementById('regName').value.trim();
+        const user = document.getElementById('regUser').value.trim();
+        const phone = document.getElementById('regPhone').value.trim();
+        const pass = document.getElementById('regPass').value;
+        const confirm = document.getElementById('regPassConfirm').value;
+
+        let ok = true;
+        ok = setError('regName', 'errRegName', !name) && ok;
+        ok = setError('regUser', 'errRegUser', user.length < 4) && ok;
+        ok = setError('regPass', 'errRegPass', pass.length < 6) && ok;
+        ok = setError('regPassConfirm', 'errRegConfirm', pass !== confirm) && ok;
+        if (!ok) return;
+
+        const btn = document.getElementById('btnRegister');
+        btn.classList.add('loading');
+
+        try {
+            const res = await fetch('http://localhost:8080/api/user/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fullName: name, username: user, password: pass, phone: phone })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                showToast('Đăng ký thành công! Vui lòng đăng nhập.');
+                setTimeout(() => switchTab('login'), 1500);
+            } else {
+                showToast(data.message || 'Tên đăng nhập đã tồn tại!', 'error');
+            }
+        } catch (err) {
+            showToast('Không thể kết nối máy chủ!', 'error');
+        } finally {
+            btn.classList.remove('loading');
+        }
+    }
+
+    // Enter key submit
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            if (currentTab === 'login') doLogin();
+            else doRegister();
+        }
+    });
+</script>
+</body>
+</html>

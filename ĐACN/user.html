@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <title>ParkFinder – Tìm Bãi Xe</title>
+    <meta name="description" content="ParkFinder – Tìm và đặt chỗ giữ xe thông minh, thanh toán nhanh chóng qua VNPay">
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <link rel="stylesheet" href="user-style.css">
+</head>
+<body>
+
+<!-- TOP TOOLBAR -->
+<div id="user-toolbar">
+    <div class="toolbar-left">
+        <div class="app-logo">Park<span>Finder</span></div>
+    </div>
+    <div class="toolbar-center">
+        <!-- Custom Nominatim Search -->
+        <div class="search-wrap" id="searchWrap">
+            <span class="search-icon">🔍</span>
+            <input
+                type="text"
+                id="searchInput"
+                class="search-input"
+                placeholder="Nhập địa chỉ cụ thể, số nhà..."
+                autocomplete="off"
+                oninput="onSearchInput()"
+                onkeydown="onSearchKey(event)"
+            >
+            <button class="search-clear" id="searchClear" onclick="clearSearch()" style="display:none">✕</button>
+            <div class="search-dropdown" id="searchDropdown"></div>
+        </div>
+    </div>
+    <div class="toolbar-right">
+        <button id="btnLocate" onclick="locateMe()">📍 Vị trí của tôi</button>
+        <label class="filter-toggle">
+            <input type="checkbox" id="filterAvailable" onchange="loadUserMarkers()">
+            <span>Còn chỗ</span>
+        </label>
+        <button id="btnHistory" onclick="toggleHistory()">📋 Lịch sử</button>
+        <div class="user-chip" id="userChip">
+            <span id="userNameDisplay">Loading...</span>
+            <button onclick="doLogout()" title="Đăng xuất">↩</button>
+        </div>
+    </div>
+</div>
+
+<!-- MAP -->
+<div id="map"></div>
+
+<!-- HISTORY SIDEBAR -->
+<div id="historySidebar" class="history-sidebar">
+    <div class="history-header">
+        <h3>📋 Lịch sử đặt chỗ</h3>
+        <button onclick="toggleHistory()" class="close-btn">✕</button>
+    </div>
+    <div id="historyList" class="history-list">
+        <div class="history-empty">Đang tải...</div>
+    </div>
+</div>
+<div class="history-overlay" id="historyOverlay" onclick="toggleHistory()"></div>
+
+<!-- BOOKING MODAL -->
+<div id="bookingModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-icon">🅿️</div>
+            <h2 class="modal-title" id="modalParkName">Đặt chỗ giữ xe</h2>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-info-row">
+                <span>📍 Bãi xe:</span>
+                <strong id="modalParkId">—</strong>
+            </div>
+            <div class="modal-info-row">
+                <span>💰 Giá:</span>
+                <strong style="color: var(--orange)">20.000 VNĐ / giờ</strong>
+            </div>
+            <div class="modal-field">
+                <label>Họ tên của bạn</label>
+                <input type="text" id="modalUserName" placeholder="Nguyễn Văn A" class="modal-input">
+                <div class="modal-err" id="modalErr">Vui lòng nhập họ tên</div>
+            </div>
+            <div class="modal-field">
+                <label>Số điện thoại (tùy chọn)</label>
+                <input type="tel" id="modalPhone" placeholder="0901234567" class="modal-input">
+            </div>
+            <div class="modal-field">
+                <label>Thời gian đặt chỗ (giờ)</label>
+                <div class="duration-picker">
+                    <button class="dur-btn" onclick="changeDuration(-1)">−</button>
+                    <div class="dur-display">
+                        <span id="durValue">1</span>
+                        <span class="dur-unit">giờ</span>
+                    </div>
+                    <button class="dur-btn" onclick="changeDuration(1)">+</button>
+                </div>
+                <div class="duration-total">
+                    Tổng tiền: <strong id="totalAmount" style="color:var(--orange)">20.000 VNĐ</strong>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn-cancel" onclick="closeModal()">Hủy</button>
+            <button class="modal-btn-confirm" id="modalConfirmBtn" onclick="goToPayment()">
+                <span class="btn-text">💳 Tiếp tục thanh toán</span>
+                <div class="spinner-sm"></div>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- PAYMENT MODAL -->
+<div id="paymentModal" class="modal-overlay payment-modal-overlay">
+    <div class="modal-box payment-modal-box">
+
+        <!-- Header -->
+        <div class="payment-header">
+            <button class="pay-back-btn" onclick="backToBooking()" title="Quay lại">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+            </button>
+            <div class="pay-header-info">
+                <div class="pay-title">Thanh toán</div>
+                <div class="pay-subtitle" id="paySubtitle">Bãi xe · 1 giờ</div>
+            </div>
+            <button class="modal-close" onclick="closePaymentModal()">✕</button>
+        </div>
+
+        <!-- Amount Banner -->
+        <div class="pay-amount-banner">
+            <div class="pay-amount-label">Tổng thanh toán</div>
+            <div class="pay-amount-value" id="payAmountDisplay">20.000 VNĐ</div>
+            <div class="pay-amount-desc" id="payAmountDesc">20.000 VNĐ × 1 giờ</div>
+        </div>
+
+        <!-- Method Selection -->
+        <div class="pay-body">
+            <div class="pay-section-title">Chọn phương thức thanh toán</div>
+
+            <div class="pay-methods">
+                <!-- VNPay QR -->
+                <div class="pay-method-card" id="method-vnpay-qr" onclick="selectMethod('vnpay-qr')">
+                    <div class="pmc-icon vnpay-icon">
+                        <img src="https://sandbox.vnpayment.vn/paymentv2/images/img/logo-vnpay-horizontal.svg"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+                             alt="VNPay" style="height:28px;width:auto;">
+                        <span style="display:none;font-weight:800;font-size:15px;color:#0066CC">VNPay</span>
+                    </div>
+                    <div class="pmc-info">
+                        <div class="pmc-name">VNPay QR</div>
+                        <div class="pmc-desc">Quét mã QR thanh toán nhanh</div>
+                    </div>
+                    <div class="pmc-badge recommended">Phổ biến</div>
+                    <div class="pmc-check">✓</div>
+                </div>
+
+                <!-- ATM/Internet Banking -->
+                <div class="pay-method-card" id="method-vnpay-atm" onclick="selectMethod('vnpay-atm')">
+                    <div class="pmc-icon bank-icon">🏦</div>
+                    <div class="pmc-info">
+                        <div class="pmc-name">ATM / Internet Banking</div>
+                        <div class="pmc-desc">Thẻ ATM nội địa, NCB, Vietcombank...</div>
+                    </div>
+                    <div class="pmc-check">✓</div>
+                </div>
+
+                <!-- VISA/Master -->
+                <div class="pay-method-card" id="method-vnpay-intl" onclick="selectMethod('vnpay-intl')">
+                    <div class="pmc-icon intl-icon">💳</div>
+                    <div class="pmc-info">
+                        <div class="pmc-name">Thẻ Quốc tế</div>
+                        <div class="pmc-desc">VISA, MasterCard, JCB</div>
+                    </div>
+                    <div class="pmc-check">✓</div>
+                </div>
+
+                <!-- Cash -->
+                <div class="pay-method-card" id="method-cash" onclick="selectMethod('cash')">
+                    <div class="pmc-icon cash-icon">💵</div>
+                    <div class="pmc-info">
+                        <div class="pmc-name">Thanh toán tại quầy</div>
+                        <div class="pmc-desc">Đặt chỗ trước, trả tiền mặt khi đến</div>
+                    </div>
+                    <div class="pmc-check">✓</div>
+                </div>
+            </div>
+
+            <!-- VNPay Security Info -->
+            <div class="pay-security-info" id="vnpaySecurityInfo">
+                <div class="psi-icon">🔒</div>
+                <div class="psi-text">
+                    Thanh toán được bảo mật bởi <strong>VNPay</strong> với chuẩn mã hóa SSL/TLS. 
+                    Thông tin thẻ không được lưu trữ.
+                </div>
+            </div>
+
+            <!-- Test Card Info (VNPay sandbox) -->
+            <div class="vnpay-test-info" id="vnpayTestInfo">
+                <div class="vti-header">🧪 Thẻ test (Sandbox)</div>
+                <div class="vti-row"><span>Ngân hàng:</span><strong>NCB</strong></div>
+                <div class="vti-row"><span>Số thẻ:</span><strong>9704198526191432198</strong></div>
+                <div class="vti-row"><span>Tên chủ thẻ:</span><strong>NGUYEN VAN A</strong></div>
+                <div class="vti-row"><span>Ngày HH:</span><strong>07/15</strong></div>
+                <div class="vti-row"><span>Mật khẩu OTP:</span><strong>123456</strong></div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="pay-footer">
+            <div class="pay-total-summary">
+                <span>Thanh toán:</span>
+                <strong id="payFooterAmount">20.000 VNĐ</strong>
+            </div>
+            <button class="pay-submit-btn" id="paySubmitBtn" onclick="processPayment()">
+                <span class="btn-text" id="payBtnText">Thanh toán ngay</span>
+                <div class="spinner-sm"></div>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- PAYMENT PROCESSING OVERLAY -->
+<div id="processingOverlay" class="processing-overlay">
+    <div class="processing-box">
+        <div class="processing-spinner">
+            <div class="ps-ring"></div>
+            <div class="ps-icon">💳</div>
+        </div>
+        <div class="processing-title">Đang xử lý thanh toán</div>
+        <div class="processing-sub">Vui lòng không đóng trang...</div>
+        <div class="processing-progress">
+            <div class="pp-bar"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<script src="user-script.js"></script>
+</body>
+</html>

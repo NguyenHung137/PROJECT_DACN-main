@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkFinder – Tìm Bãi Xe Thông Minh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy:   #0A1628;
+            --blue:   #2563EB;
+            --blue2:  #3B82F6;
+            --orange: #F97316;
+            --green:  #10B981;
+            --red:    #EF4444;
+            --light:  #F8FAFC;
+            --text:   #1E293B;
+            --muted:  #64748B;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            color: var(--text);
+            background: var(--light);
+            overflow-x: hidden;
+        }
+
+        /* ─── NAVBAR ─── */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 18px 60px;
+            background: rgba(10,22,40,0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            animation: slideDown .6s ease both;
+        }
+        @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .nav-logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 22px; font-weight: 800;
+            color: #fff; letter-spacing: -0.5px;
+        }
+        .nav-logo span { color: var(--orange); }
+        .nav-links { display: flex; gap: 30px; }
+        .nav-links a {
+            color: rgba(255,255,255,0.7); text-decoration: none;
+            font-size: 14px; font-weight: 500;
+            transition: color .2s;
+        }
+        .nav-links a:hover { color: #fff; }
+        .nav-btns { display: flex; gap: 12px; }
+        .btn-ghost {
+            padding: 9px 20px; border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #fff; background: transparent;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: 14px; font-weight: 500;
+            cursor: pointer; transition: all .2s;
+            text-decoration: none;
+        }
+        .btn-ghost:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.6); }
+        .btn-primary {
+            padding: 9px 20px; border-radius: 8px;
+            background: var(--orange); color: #fff;
+            border: none; font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: 14px; font-weight: 600;
+            cursor: pointer; transition: all .2s;
+            text-decoration: none;
+        }
+        .btn-primary:hover { background: #ea6b00; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(249,115,22,.4); }
+
+        /* ─── HERO ─── */
+        .hero {
+            min-height: 100vh;
+            background: var(--navy);
+            position: relative; overflow: hidden;
+            display: flex; align-items: center;
+        }
+        .hero-bg {
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse 80% 60% at 60% 40%, rgba(37,99,235,0.35) 0%, transparent 70%),
+                        radial-gradient(ellipse 50% 50% at 20% 80%, rgba(249,115,22,0.18) 0%, transparent 60%);
+        }
+        /* Animated grid */
+        .hero-grid {
+            position: absolute; inset: 0; opacity: 0.07;
+            background-image: linear-gradient(rgba(255,255,255,.4) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,.4) 1px, transparent 1px);
+            background-size: 60px 60px;
+            animation: gridPan 20s linear infinite;
+        }
+        @keyframes gridPan { from { transform: translate(0,0); } to { transform: translate(60px, 60px); } }
+
+        /* Floating pins */
+        .pin {
+            position: absolute;
+            width: 40px; height: 50px;
+            animation: float 4s ease-in-out infinite;
+            opacity: 0.6;
+        }
+        .pin svg { width: 100%; height: 100%; }
+        .pin-1 { top: 20%; left: 15%; animation-delay: 0s; }
+        .pin-2 { top: 60%; left: 75%; animation-delay: 1.2s; }
+        .pin-3 { top: 30%; left: 80%; animation-delay: 2.5s; }
+        .pin-4 { top: 75%; left: 25%; animation-delay: 0.8s; }
+        .pin-5 { top: 15%; left: 55%; animation-delay: 1.8s; }
+        @keyframes float {
+            0%,100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-18px) scale(1.05); }
+        }
+
+        .hero-content {
+            position: relative; z-index: 2;
+            padding: 0 60px; max-width: 700px;
+            animation: heroIn .9s ease .3s both;
+        }
+        @keyframes heroIn {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(37,99,235,0.25);
+            border: 1px solid rgba(59,130,246,0.4);
+            color: var(--blue2); padding: 6px 14px;
+            border-radius: 50px; font-size: 13px; font-weight: 600;
+            margin-bottom: 28px; letter-spacing: .3px;
+        }
+        .badge-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue2); animation: blink 1.4s ease infinite; }
+        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
+        .hero h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(44px, 5.5vw, 72px);
+            font-weight: 900; line-height: 1.05;
+            color: #fff; letter-spacing: -2px;
+            margin-bottom: 24px;
+        }
+        .hero h1 .accent { color: var(--orange); }
+        .hero p {
+            font-size: 18px; color: rgba(255,255,255,0.65);
+            line-height: 1.7; max-width: 520px; margin-bottom: 42px;
+        }
+        .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; }
+        .btn-hero-main {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 16px 32px; border-radius: 12px;
+            background: var(--orange); color: #fff;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: 16px; font-weight: 700;
+            text-decoration: none; border: none; cursor: pointer;
+            transition: all .25s;
+            box-shadow: 0 8px 30px rgba(249,115,22,.4);
+        }
+        .btn-hero-main:hover { background: #ea6b00; transform: translateY(-3px); box-shadow: 0 14px 40px rgba(249,115,22,.5); }
+        .btn-hero-sec {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 16px 32px; border-radius: 12px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff; font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: 16px; font-weight: 600;
+            text-decoration: none; cursor: pointer;
+            transition: all .25s;
+        }
+        .btn-hero-sec:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); }
+
+        /* Hero right: mockup card */
+        .hero-visual {
+            position: absolute; right: 60px; top: 50%;
+            transform: translateY(-50%);
+            animation: heroIn .9s ease .6s both;
+        }
+        .map-card {
+            width: 400px; height: 480px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 24px;
+            backdrop-filter: blur(10px);
+            overflow: hidden; position: relative;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+        }
+        .map-card-header {
+            padding: 18px 20px;
+            background: rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .card-dots { display: flex; gap: 6px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .dot-r { background: #EF4444; }
+        .dot-y { background: #F59E0B; }
+        .dot-g { background: #10B981; }
+        .card-title { color: rgba(255,255,255,0.8); font-size: 13px; font-weight: 600; font-family: 'Outfit', sans-serif; margin-left: 6px; }
+        .map-body { position: relative; height: 340px; overflow: hidden; }
+        .map-img {
+            width: 100%; height: 100%;
+            background: linear-gradient(135deg, #1a2744 0%, #162035 100%);
+            position: relative;
+        }
+        /* Fake map grid lines */
+        .map-img::before {
+            content: '';
+            position: absolute; inset: 0;
+            background-image: linear-gradient(rgba(59,130,246,.1) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(59,130,246,.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        /* Fake roads */
+        .road { position: absolute; background: rgba(255,255,255,0.07); border-radius: 2px; }
+        .r1 { width: 100%; height: 3px; top: 35%; }
+        .r2 { width: 3px; height: 100%; left: 40%; }
+        .r3 { width: 100%; height: 3px; top: 65%; }
+        .r4 { width: 3px; height: 100%; left: 70%; }
+        /* Map pins */
+        .mpin {
+            position: absolute; transform: translate(-50%, -100%);
+            animation: float 3s ease-in-out infinite;
+        }
+        .mpin-icon {
+            width: 32px; height: 32px; border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        .mpin-g .mpin-icon { background: #10B981; }
+        .mpin-r .mpin-icon { background: #EF4444; }
+        .mpin span { display: inline-block; transform: rotate(45deg); font-size: 14px; }
+        .mpin-1 { left: 35%; top: 48%; animation-delay: 0s; }
+        .mpin-2 { left: 55%; top: 55%; animation-delay: .8s; }
+        .mpin-3 { left: 68%; top: 38%; animation-delay: 1.6s; }
+        .mpin-4 { left: 25%; top: 65%; animation-delay: 2.1s; }
+        /* Popup card */
+        .map-popup {
+            position: absolute; right: 16px; top: 20px;
+            background: rgba(255,255,255,0.95); border-radius: 12px;
+            padding: 14px; width: 160px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            animation: popIn .4s ease .9s both;
+        }
+        @keyframes popIn { from { opacity: 0; transform: scale(.8); } to { opacity: 1; transform: scale(1); } }
+        .popup-name { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+        .popup-status { font-size: 11px; color: var(--green); font-weight: 600; display: flex; align-items: center; gap: 4px; }
+        .popup-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+        .popup-pred { font-size: 10px; color: #e67e22; margin-top: 4px; font-weight: 500; }
+        .popup-btn {
+            display: block; margin-top: 8px; padding: 7px;
+            background: var(--orange); color: white;
+            border-radius: 7px; font-size: 11px; font-weight: 700;
+            text-align: center; border: none; cursor: pointer;
+        }
+        .card-footer {
+            padding: 14px 20px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .stat-mini { text-align: center; }
+        .stat-mini-val { color: #fff; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; }
+        .stat-mini-lbl { color: rgba(255,255,255,0.45); font-size: 10px; margin-top: 2px; }
+        .stat-sep { width: 1px; height: 30px; background: rgba(255,255,255,0.1); }
+
+        /* ─── STATS BAR ─── */
+        .stats-bar {
+            background: #fff;
+            padding: 40px 60px;
+            display: flex; gap: 0;
+            border-bottom: 1px solid #E2E8F0;
+        }
+        .stat-item {
+            flex: 1; text-align: center;
+            padding: 10px 20px;
+            border-right: 1px solid #E2E8F0;
+            opacity: 0; transform: translateY(20px);
+            transition: all .5s ease;
+        }
+        .stat-item.visible { opacity: 1; transform: translateY(0); }
+        .stat-item:last-child { border-right: none; }
+        .stat-num {
+            font-family: 'Outfit', sans-serif;
+            font-size: 42px; font-weight: 800;
+            color: var(--navy); line-height: 1;
+        }
+        .stat-num .unit { font-size: 22px; color: var(--orange); }
+        .stat-lbl { font-size: 14px; color: var(--muted); margin-top: 6px; }
+
+        /* ─── FEATURES ─── */
+        .features {
+            padding: 100px 60px;
+            background: var(--light);
+        }
+        .section-label {
+            display: inline-block;
+            background: rgba(37,99,235,0.1);
+            color: var(--blue); padding: 5px 14px;
+            border-radius: 50px; font-size: 12px; font-weight: 700;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(30px, 3.5vw, 46px);
+            font-weight: 800; line-height: 1.1;
+            color: var(--navy); letter-spacing: -1px;
+            margin-bottom: 60px;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+        .feat-card {
+            background: #fff; border-radius: 20px;
+            padding: 36px 32px;
+            border: 1px solid #E2E8F0;
+            transition: all .3s ease;
+            position: relative; overflow: hidden;
+        }
+        .feat-card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--blue), var(--orange));
+            transform: scaleX(0); transform-origin: left;
+            transition: transform .3s ease;
+        }
+        .feat-card:hover { transform: translateY(-6px); box-shadow: 0 20px 50px rgba(10,22,40,0.12); border-color: transparent; }
+        .feat-card:hover::before { transform: scaleX(1); }
+        .feat-icon {
+            width: 56px; height: 56px; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; margin-bottom: 24px;
+        }
+        .fi-blue { background: rgba(37,99,235,0.1); }
+        .fi-orange { background: rgba(249,115,22,0.1); }
+        .fi-green { background: rgba(16,185,129,0.1); }
+        .fi-purple { background: rgba(139,92,246,0.1); }
+        .fi-teal { background: rgba(20,184,166,0.1); }
+        .fi-red { background: rgba(239,68,68,0.1); }
+        .feat-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px; font-weight: 700; color: var(--navy);
+            margin-bottom: 12px;
+        }
+        .feat-desc { font-size: 15px; color: var(--muted); line-height: 1.65; }
+
+        /* ─── HOW IT WORKS ─── */
+        .how {
+            padding: 100px 60px;
+            background: var(--navy); color: white;
+            position: relative; overflow: hidden;
+        }
+        .how::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse 60% 80% at 80% 50%, rgba(37,99,235,0.2), transparent);
+        }
+        .how .section-label { background: rgba(59,130,246,0.2); color: var(--blue2); }
+        .how .section-title { color: #fff; }
+        .steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 40px; position: relative; z-index: 1; }
+        .step { text-align: center; }
+        .step-num {
+            width: 64px; height: 64px; border-radius: 20px;
+            background: rgba(37,99,235,0.25);
+            border: 1px solid rgba(59,130,246,0.3);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 24px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 28px; font-weight: 800; color: var(--blue2);
+        }
+        .step h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 22px; font-weight: 700; margin-bottom: 12px; color: #fff;
+        }
+        .step p { font-size: 15px; color: rgba(255,255,255,0.55); line-height: 1.7; }
+
+        /* ─── CTA ─── */
+        .cta {
+            padding: 100px 60px; text-align: center;
+            background: linear-gradient(135deg, #EFF6FF 0%, #FFF7ED 100%);
+        }
+        .cta h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(32px, 4vw, 56px);
+            font-weight: 900; color: var(--navy);
+            letter-spacing: -1.5px; margin-bottom: 16px;
+        }
+        .cta p { font-size: 18px; color: var(--muted); margin-bottom: 40px; }
+        .cta-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+        /* ─── FOOTER ─── */
+        footer {
+            background: var(--navy); color: rgba(255,255,255,0.5);
+            padding: 30px 60px;
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 14px;
+        }
+        footer .logo { color: #fff; font-family: 'Outfit', sans-serif; font-weight: 700; }
+        footer .logo span { color: var(--orange); }
+
+        @media (max-width: 900px) {
+            nav { padding: 16px 24px; }
+            .nav-links { display: none; }
+            .hero-content { padding: 0 24px; }
+            .hero-visual { display: none; }
+            .stats-bar { flex-wrap: wrap; padding: 30px 24px; }
+            .stat-item { border-right: none; border-bottom: 1px solid #E2E8F0; }
+            .features { padding: 60px 24px; }
+            .features-grid { grid-template-columns: 1fr; }
+            .how { padding: 60px 24px; }
+            .steps { grid-template-columns: 1fr; gap: 30px; }
+            .cta { padding: 60px 24px; }
+            footer { flex-direction: column; gap: 12px; text-align: center; padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+    <div class="nav-logo">Park<span>Finder</span></div>
+    <div class="nav-links">
+        <a href="#features">Tính năng</a>
+        <a href="#how">Cách dùng</a>
+    </div>
+    <div class="nav-btns">
+        <a href="login.html" class="btn-ghost">Đăng nhập</a>
+        <a href="login.html" class="btn-primary">Dùng miễn phí</a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+
+    <!-- Floating decorative pins -->
+    <div class="pin pin-1">
+        <svg viewBox="0 0 40 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="20" cy="18" r="18" fill="#10B981" opacity=".8"/>
+            <text x="20" y="24" text-anchor="middle" font-size="16" fill="white">P</text>
+            <path d="M20 36 L13 26 Q6 18 20 18 Q34 18 27 26 Z" fill="#10B981" opacity=".8"/>
+        </svg>
+    </div>
+    <div class="pin pin-2">
+        <svg viewBox="0 0 40 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="20" cy="18" r="18" fill="#EF4444" opacity=".8"/>
+            <text x="20" y="24" text-anchor="middle" font-size="16" fill="white">P</text>
+            <path d="M20 36 L13 26 Q6 18 20 18 Q34 18 27 26 Z" fill="#EF4444" opacity=".8"/>
+        </svg>
+    </div>
+    <div class="pin pin-3">
+        <svg viewBox="0 0 40 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="20" cy="18" r="18" fill="#10B981" opacity=".8"/>
+            <text x="20" y="24" text-anchor="middle" font-size="16" fill="white">P</text>
+            <path d="M20 36 L13 26 Q6 18 20 18 Q34 18 27 26 Z" fill="#10B981" opacity=".8"/>
+        </svg>
+    </div>
+    <div class="pin pin-4">
+        <svg viewBox="0 0 40 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="20" cy="18" r="18" fill="#F97316" opacity=".8"/>
+            <text x="20" y="24" text-anchor="middle" font-size="16" fill="white">P</text>
+            <path d="M20 36 L13 26 Q6 18 20 18 Q34 18 27 26 Z" fill="#F97316" opacity=".8"/>
+        </svg>
+    </div>
+    <div class="pin pin-5">
+        <svg viewBox="0 0 40 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="20" cy="18" r="18" fill="#10B981" opacity=".8"/>
+            <text x="20" y="24" text-anchor="middle" font-size="16" fill="white">P</text>
+            <path d="M20 36 L13 26 Q6 18 20 18 Q34 18 27 26 Z" fill="#10B981" opacity=".8"/>
+        </svg>
+    </div>
+
+    <div class="hero-content">
+        <div class="hero-badge">
+            <div class="badge-dot"></div>
+            AI-Powered Parking System
+        </div>
+        <h1>Tìm Bãi Xe<br><span class="accent">Nhanh & Thông Minh</span></h1>
+        <p>Hệ thống định vị bãi giữ xe thời gian thực, dự báo tình trạng chỗ trống bằng Machine Learning, giúp bạn tiết kiệm thời gian mỗi ngày.</p>
+        <div class="hero-actions">
+            <a href="login.html" class="btn-hero-main">🔍 Tìm bãi xe ngay</a>
+            <a href="login.html?role=admin" class="btn-hero-sec">⚙️ Quản trị viên</a>
+        </div>
+    </div>
+
+    <!-- Visual mockup -->
+    <div class="hero-visual">
+        <div class="map-card">
+            <div class="map-card-header">
+                <div class="card-dots">
+                    <div class="dot dot-r"></div>
+                    <div class="dot dot-y"></div>
+                    <div class="dot dot-g"></div>
+                </div>
+                <span class="card-title">ParkFinder Map</span>
+            </div>
+            <div class="map-body">
+                <div class="map-img">
+                    <div class="road r1"></div>
+                    <div class="road r2"></div>
+                    <div class="road r3"></div>
+                    <div class="road r4"></div>
+                    <div class="mpin mpin-g mpin-1">
+                        <div class="mpin-icon"><span>🅿</span></div>
+                    </div>
+                    <div class="mpin mpin-r mpin-2">
+                        <div class="mpin-icon"><span>🅿</span></div>
+                    </div>
+                    <div class="mpin mpin-g mpin-3">
+                        <div class="mpin-icon"><span>🅿</span></div>
+                    </div>
+                    <div class="mpin mpin-g mpin-4">
+                        <div class="mpin-icon"><span>🅿</span></div>
+                    </div>
+                    <div class="map-popup">
+                        <div class="popup-name">Bãi xe Quận 10</div>
+                        <div class="popup-status">Còn chỗ</div>
+                        <div class="popup-pred">🔮 Dự báo 30p: 23% đầy</div>
+                        <button class="popup-btn">🧡 Đặt chỗ ngay</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="stat-mini">
+                    <div class="stat-mini-val">247</div>
+                    <div class="stat-mini-lbl">Bãi xe</div>
+                </div>
+                <div class="stat-sep"></div>
+                <div class="stat-mini">
+                    <div class="stat-mini-val" style="color: var(--green)">182</div>
+                    <div class="stat-mini-lbl">Còn chỗ</div>
+                </div>
+                <div class="stat-sep"></div>
+                <div class="stat-mini">
+                    <div class="stat-mini-val" style="color: var(--red)">65</div>
+                    <div class="stat-mini-lbl">Đầy chỗ</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+    <div class="stat-item" data-target="247">
+        <div class="stat-num"><span class="counter">0</span><span class="unit">+</span></div>
+        <div class="stat-lbl">Bãi xe đang hoạt động</div>
+    </div>
+    <div class="stat-item" data-target="1500">
+        <div class="stat-num"><span class="counter">0</span><span class="unit">+</span></div>
+        <div class="stat-lbl">Lượt đặt chỗ mỗi ngày</div>
+    </div>
+    <div class="stat-item" data-target="98">
+        <div class="stat-num"><span class="counter">0</span><span class="unit">%</span></div>
+        <div class="stat-lbl">Độ chính xác dự báo AI</div>
+    </div>
+    <div class="stat-item" data-target="30">
+        <div class="stat-num"><span class="counter">0</span><span class="unit">s</span></div>
+        <div class="stat-lbl">Thời gian tìm bãi trung bình</div>
+    </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+    <div style="text-align: center; margin-bottom: 60px;">
+        <div class="section-label">Tính Năng</div>
+        <div class="section-title">Mọi thứ bạn cần<br>trong một ứng dụng</div>
+    </div>
+    <div class="features-grid">
+        <div class="feat-card">
+            <div class="feat-icon fi-blue">🗺️</div>
+            <div class="feat-title">Bản Đồ Thời Gian Thực</div>
+            <p class="feat-desc">Xem tất cả bãi xe trên bản đồ Mapbox với màu sắc trực quan — xanh (còn chỗ) và đỏ (đầy chỗ) cập nhật liên tục.</p>
+        </div>
+        <div class="feat-card">
+            <div class="feat-icon fi-orange">🔮</div>
+            <div class="feat-title">Dự Báo AI (ML)</div>
+            <p class="feat-desc">Mô hình Logistic Regression dự báo khả năng bãi xe đầy trong 30 phút tới, giúp bạn chủ động hơn khi di chuyển.</p>
+        </div>
+        <div class="feat-card">
+            <div class="feat-icon fi-green">📍</div>
+            <div class="feat-title">Định Vị GPS Chính Xác</div>
+            <p class="feat-desc">Tìm bãi xe gần vị trí hiện tại của bạn nhất, với khả năng chỉ đường tích hợp Google Maps một chạm.</p>
+        </div>
+        <div class="feat-card">
+            <div class="feat-icon fi-purple">⚡</div>
+            <div class="feat-title">Đặt Chỗ Nhanh</div>
+            <p class="feat-desc">Đặt chỗ giữ xe chỉ trong vài giây, không cần chờ đợi. Admin xác nhận và giải phóng chỗ real-time.</p>
+        </div>
+        <div class="feat-card">
+            <div class="feat-icon fi-teal">📊</div>
+            <div class="feat-title">Dashboard Doanh Thu</div>
+            <p class="feat-desc">Bảng điều khiển quản trị với biểu đồ doanh thu, thống kê lượt đỗ xe và báo cáo chi tiết theo thời gian.</p>
+        </div>
+        <div class="feat-card">
+            <div class="feat-icon fi-red">🔒</div>
+            <div class="feat-title">Bảo Mật & Phân Quyền</div>
+            <p class="feat-desc">Hệ thống xác thực riêng biệt cho Admin và User. Session bảo mật, tự động đăng xuất khi hết phiên.</p>
+        </div>
+    </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+    <div style="text-align: center; margin-bottom: 60px;">
+        <div class="section-label">Hướng Dẫn</div>
+        <div class="section-title">3 bước đơn giản<br>là có chỗ đậu xe</div>
+    </div>
+    <div class="steps">
+        <div class="step">
+            <div class="step-num">1</div>
+            <h3>Đăng nhập</h3>
+            <p>Tạo tài khoản miễn phí hoặc đăng nhập ngay. Hệ thống ghi nhớ lịch sử đặt chỗ của bạn.</p>
+        </div>
+        <div class="step">
+            <div class="step-num">2</div>
+            <h3>Chọn bãi xe</h3>
+            <p>Xem bản đồ, nhấn vào điểm xanh để xem thông tin chi tiết và dự báo AI về khả năng còn chỗ.</p>
+        </div>
+        <div class="step">
+            <div class="step-num">3</div>
+            <h3>Đặt chỗ & Đi</h3>
+            <p>Nhấn "Đặt chỗ ngay", hệ thống giữ chỗ cho bạn. Dùng chỉ đường tích hợp để đến nơi nhanh nhất.</p>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+    <h2>Sẵn sàng không còn<br>mất thời gian tìm chỗ đỗ?</h2>
+    <p>Tham gia ngay — miễn phí, không cần cài đặt.</p>
+    <div class="cta-btns">
+        <a href="login.html" class="btn-hero-main">🚗 Bắt đầu miễn phí</a>
+        <a href="login.html?role=admin" class="btn-hero-sec" style="border-color: var(--blue); color: var(--blue); background: rgba(37,99,235,0.06);">⚙️ Đăng nhập Admin</a>
+    </div>
+</section>
+
+<footer>
+    <div class="logo">Park<span>Finder</span></div>
+    <div>© 2026 ParkFinder – Đồ án chuyên ngành</div>
+</footer>
+
+<script>
+// Animated counter
+function animateCounter(el, target, duration = 1500) {
+    let start = 0;
+    const step = target / (duration / 16);
+    const timer = setInterval(() => {
+        start += step;
+        if (start >= target) { start = target; clearInterval(timer); }
+        el.textContent = Math.floor(start).toLocaleString('vi-VN');
+    }, 16);
+}
+
+// Intersection observer for stats
+const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            const target = parseInt(entry.target.dataset.target);
+            const counter = entry.target.querySelector('.counter');
+            if (counter && !counter.dataset.animated) {
+                counter.dataset.animated = '1';
+                animateCounter(counter, target);
+            }
+        }
+    });
+}, { threshold: 0.2 });
+
+document.querySelectorAll('.stat-item').forEach(el => observer.observe(el));
+
+// Check if coming as admin
+const params = new URLSearchParams(window.location.search);
+if (params.get('role') === 'admin') {
+    window.location.href = 'login.html?role=admin';
+}
+</script>
+</body>
+</html>

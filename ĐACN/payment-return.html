@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkFinder – Kết quả thanh toán</title>
+    <meta name="description" content="Kết quả giao dịch thanh toán ParkFinder">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy:   #0A1628;
+            --blue:   #2563EB;
+            --orange: #F97316;
+            --green:  #10B981;
+            --red:    #EF4444;
+            --light:  #F8FAFC;
+            --text:   #1E293B;
+            --muted:  #64748B;
+            --border: #E2E8F0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background: linear-gradient(135deg, #0A1628 0%, #162540 50%, #0f2847 100%);
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 20px; position: relative; overflow: hidden;
+        }
+
+        /* ─── BG DECORATIONS ─── */
+        .bg-circle {
+            position: fixed; border-radius: 50%;
+            pointer-events: none; z-index: 0;
+        }
+        .bc-1 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(37,99,235,0.15), transparent 70%);
+            top: -150px; left: -150px;
+        }
+        .bc-2 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(249,115,22,0.12), transparent 70%);
+            bottom: -100px; right: -100px;
+        }
+        .bg-grid {
+            position: fixed; inset: 0; z-index: 0; opacity: 0.04;
+            background-image: linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* ─── RESULT CARD ─── */
+        .result-card {
+            background: white; border-radius: 28px;
+            width: 100%; max-width: 460px;
+            box-shadow: 0 50px 120px rgba(0,0,0,0.4);
+            overflow: hidden; position: relative; z-index: 1;
+            animation: cardIn .6s cubic-bezier(.34,1.4,.64,1) both;
+        }
+        @keyframes cardIn {
+            from { opacity: 0; transform: scale(.8) translateY(40px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* ─── STATUS HEADER ─── */
+        .result-header {
+            padding: 40px 32px 32px; text-align: center;
+            position: relative;
+        }
+        .result-header.success {
+            background: linear-gradient(160deg, #ecfdf5 0%, #f0fdf4 100%);
+        }
+        .result-header.failed {
+            background: linear-gradient(160deg, #fef2f2 0%, #fff1f2 100%);
+        }
+        .result-header.pending {
+            background: linear-gradient(160deg, #eff6ff 0%, #f0f9ff 100%);
+        }
+
+        .status-icon-wrap {
+            width: 88px; height: 88px; border-radius: 50%;
+            margin: 0 auto 20px; display: flex;
+            align-items: center; justify-content: center;
+            position: relative;
+        }
+        .sic-success { background: linear-gradient(135deg, #10B981, #059669); box-shadow: 0 8px 30px rgba(16,185,129,0.4); }
+        .sic-failed  { background: linear-gradient(135deg, #EF4444, #DC2626); box-shadow: 0 8px 30px rgba(239,68,68,0.4); }
+        .sic-pending { background: linear-gradient(135deg, #2563EB, #1d4ed8); box-shadow: 0 8px 30px rgba(37,99,235,0.4); }
+
+        .status-emoji { font-size: 40px; animation: iconPop .5s .3s cubic-bezier(.34,1.4,.64,1) both; }
+        @keyframes iconPop { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
+
+        .pulse-ring {
+            position: absolute; inset: -6px; border-radius: 50%;
+            border: 3px solid;
+            animation: pulseRing 2s ease-out infinite;
+        }
+        .pr-success { border-color: rgba(16,185,129,0.4); }
+        .pr-failed  { border-color: rgba(239,68,68,0.4); }
+        @keyframes pulseRing {
+            0%   { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.4); opacity: 0; }
+        }
+
+        .result-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 26px; font-weight: 900;
+            margin-bottom: 6px;
+        }
+        .rt-success { color: #059669; }
+        .rt-failed  { color: #DC2626; }
+        .rt-pending { color: #1d4ed8; }
+        .result-sub { font-size: 14px; color: var(--muted); line-height: 1.5; }
+
+        /* ─── DETAIL SECTION ─── */
+        .result-body { padding: 24px 32px; }
+
+        .detail-grid {
+            background: var(--light); border-radius: 16px;
+            overflow: hidden; margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+        .detail-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 16px; border-bottom: 1px solid var(--border);
+            animation: rowIn .4s ease both;
+        }
+        .detail-row:last-child { border-bottom: none; }
+        @keyframes rowIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        .detail-row:nth-child(1) { animation-delay: .1s; }
+        .detail-row:nth-child(2) { animation-delay: .15s; }
+        .detail-row:nth-child(3) { animation-delay: .2s; }
+        .detail-row:nth-child(4) { animation-delay: .25s; }
+        .detail-row:nth-child(5) { animation-delay: .3s; }
+
+        .dr-label { font-size: 13px; color: var(--muted); font-weight: 500; }
+        .dr-value { font-size: 14px; color: var(--navy); font-weight: 700; text-align: right; max-width: 60%; }
+        .dr-amount { color: var(--green); font-size: 16px; font-family: 'Outfit', sans-serif; }
+        .dr-txn { font-family: monospace; font-size: 12px; color: var(--blue); letter-spacing: .5px; }
+
+        /* ─── BADGES ─── */
+        .badge-success {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(16,185,129,0.1); color: var(--green);
+            border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 50px; padding: 4px 12px;
+            font-size: 12px; font-weight: 700;
+        }
+        .badge-failed {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(239,68,68,0.1); color: var(--red);
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 50px; padding: 4px 12px;
+            font-size: 12px; font-weight: 700;
+        }
+
+        /* ─── VNPay BRANDING ─── */
+        .vnpay-brand {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 12px; border-radius: 10px;
+            background: #EBF3FF; margin-bottom: 20px;
+            font-size: 12px; color: var(--muted);
+        }
+        .vnpay-brand strong { color: #0066CC; }
+
+        /* ─── BUTTONS ─── */
+        .result-actions { display: flex; flex-direction: column; gap: 10px; }
+        .btn-primary {
+            width: 100%; padding: 14px;
+            background: linear-gradient(135deg, #2563EB, #3B82F6);
+            color: white; border: none; border-radius: 12px;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: 15px; font-weight: 700;
+            cursor: pointer; transition: all .2s;
+            box-shadow: 0 6px 20px rgba(37,99,235,0.3);
+            text-decoration: none; display: flex;
+            align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(37,99,235,0.4); }
+        .btn-secondary {
+            width: 100%; padding: 13px;
+            background: white; color: var(--text);
+            border: 1.5px solid var(--border); border-radius: 12px;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: 15px; font-weight: 600;
+            cursor: pointer; transition: all .2s;
+            text-decoration: none; display: flex;
+            align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-secondary:hover { background: var(--light); border-color: #cbd5e1; }
+
+        /* ─── FOOTER BRAND ─── */
+        .footer-brand {
+            margin-top: 20px; text-align: center; z-index: 1; position: relative;
+        }
+        .footer-brand .logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 18px; font-weight: 800; color: white;
+            opacity: 0.6; letter-spacing: -0.5px;
+        }
+        .footer-brand .logo span { color: var(--orange); }
+        .footer-brand p { font-size: 12px; color: rgba(255,255,255,0.3); margin-top: 4px; }
+
+        /* ─── CONFETTI ─── */
+        .confetti-container {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+        }
+        .confetti-piece {
+            position: absolute; width: 10px; height: 10px;
+            border-radius: 2px; opacity: 0;
+            animation: confettiFall linear forwards;
+        }
+        @keyframes confettiFall {
+            0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* ─── LOADING STATE ─── */
+        .loading-state {
+            text-align: center; padding: 60px 32px;
+        }
+        .loading-spinner {
+            width: 60px; height: 60px; border-radius: 50%;
+            border: 4px solid var(--border);
+            border-top-color: var(--blue);
+            animation: spin .8s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 480px) {
+            .result-header { padding: 32px 20px 24px; }
+            .result-body   { padding: 20px; }
+            .result-title  { font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-circle bc-1"></div>
+<div class="bg-circle bc-2"></div>
+<div class="bg-grid"></div>
+<div class="confetti-container" id="confettiContainer"></div>
+
+<div class="result-card" id="resultCard">
+    <div class="loading-state" id="loadingState">
+        <div class="loading-spinner"></div>
+        <div style="font-size:16px;font-weight:600;color:var(--text)">Đang xác nhận thanh toán...</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:6px">Vui lòng chờ trong giây lát</div>
+    </div>
+</div>
+
+<div class="footer-brand">
+    <div class="logo">Park<span>Finder</span></div>
+    <p>Hệ thống tìm bãi xe thông minh</p>
+</div>
+
+<script>
+// ─── PARSE PARAMS ───────────────────────────────────────────
+const params = new URLSearchParams(window.location.search);
+const responseCode = params.get('vnp_ResponseCode') || params.get('code');
+const txnRef       = params.get('vnp_TxnRef') || params.get('txnRef') || ('PKF' + Date.now());
+const amount       = params.get('vnp_Amount') ? parseInt(params.get('vnp_Amount')) / 100 : null;
+const bankCode     = params.get('vnp_BankCode') || 'VNPay';
+const transDate    = params.get('vnp_PayDate') || '';
+const isDemo       = params.get('demo') === '1';
+
+// Restore pending booking info
+let booking = null;
+try {
+    booking = JSON.parse(sessionStorage.getItem('pendingBooking') || 'null');
+} catch { booking = null; }
+
+// ─── DETERMINE STATUS ───────────────────────────────────────
+// VNPay: '00' = success, everything else = failed
+let isSuccess = false;
+
+if (responseCode === '00' || responseCode === 'success') {
+    isSuccess = true;
+} else if (!responseCode && isDemo) {
+    // Demo mode without code = treat as success for demo purposes
+    isSuccess = true;
+} else if (!responseCode && !isDemo) {
+    // No params at all - check if navigated directly
+    isSuccess = false;
+}
+
+const displayAmount = amount
+    ? (amount).toLocaleString('vi-VN') + ' VNĐ'
+    : (booking ? (booking.total).toLocaleString('vi-VN') + ' VNĐ' : '20.000 VNĐ');
+
+const parkName  = booking ? booking.parkName : 'Bãi xe ParkFinder';
+const userName  = booking ? booking.name     : sessionStorage.getItem('userName') || '—';
+const duration  = booking ? booking.duration : 1;
+
+// Format txn date
+function formatVnDate(str) {
+    if (!str || str.length < 12) return new Date().toLocaleString('vi-VN');
+    try {
+        const y = str.slice(0,4), mo = str.slice(4,6), d = str.slice(6,8);
+        const h = str.slice(8,10), mi = str.slice(10,12), s = str.slice(12,14) || '00';
+        return `${d}/${mo}/${y} ${h}:${mi}:${s}`;
+    } catch { return new Date().toLocaleString('vi-VN'); }
+}
+
+const displayDate = transDate ? formatVnDate(transDate) : new Date().toLocaleString('vi-VN');
+const shortTxn = txnRef.length > 20 ? txnRef.slice(-16) : txnRef;
+
+// ─── CREATE BOOKING IN BACKEND (after VNPay success) ──────────────────────
+async function createBookingAfterPayment() {
+    if (!booking || !booking.parkId) return;
+    try {
+        const url = `http://localhost:8080/api/booking/create/${booking.parkId}` +
+            `?userName=${encodeURIComponent(booking.name)}` +
+            (booking.phone ? `&phone=${encodeURIComponent(booking.phone)}` : '') +
+            `&duration=${booking.duration || 1}` +
+            `&txnRef=${encodeURIComponent(txnRef)}` +
+            `&paymentMethod=vnpay`;
+        await fetch(url, { method: 'POST' });
+        console.log('[ParkFinder] Booking saved to backend after VNPay payment');
+    } catch (e) {
+        console.warn('[ParkFinder] Could not save booking to backend:', e.message);
+    }
+}
+
+// ─── RENDER RESULT ──────────────────────────────────────────
+setTimeout(() => {
+    const card = document.getElementById('resultCard');
+
+    if (isSuccess) {
+        card.innerHTML = `
+        <div class="result-header success">
+            <div class="status-icon-wrap sic-success">
+                <div class="pulse-ring pr-success"></div>
+                <div class="status-emoji">✓</div>
+            </div>
+            <div class="result-title rt-success">Thanh toán thành công!</div>
+            <div class="result-sub">Giao dịch đã được xác nhận.<br>Chỗ xe của bạn đã được giữ.</div>
+        </div>
+
+        <div class="result-body">
+            <div class="vnpay-brand">
+                <span>🔒</span>
+                <span>Giao dịch được xử lý bởi <strong>VNPay Sandbox</strong></span>
+            </div>
+
+            <div class="detail-grid">
+                <div class="detail-row">
+                    <span class="dr-label">🅿️ Bãi xe</span>
+                    <span class="dr-value">${parkName}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="dr-label">👤 Khách hàng</span>
+                    <span class="dr-value">${userName}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="dr-label">⏱ Thời gian</span>
+                    <span class="dr-value">${duration} giờ</span>
+                </div>
+                <div class="detail-row">
+                    <span class="dr-label">💰 Số tiền</span>
+                    <span class="dr-value dr-amount">${displayAmount}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="dr-label">🏦 Ngân hàng</span>
+                    <span class="dr-value">${bankCode}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="dr-label">📋 Mã GD</span>
+                    <span class="dr-value dr-txn">${shortTxn}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="dr-label">🕐 Thời điểm</span>
+                    <span class="dr-value" style="font-size:12px">${displayDate}</span>
+                </div>
+            </div>
+
+            <div style="text-align:center;margin-bottom:16px">
+                <span class="badge-success">✅ Giao dịch thành công</span>
+            </div>
+
+            <div class="result-actions">
+                <a href="user.html" class="btn-primary">🗺️ Quay lại bản đồ</a>
+                <button class="btn-secondary" onclick="window.print()">🖨️ In biên lai</button>
+            </div>
+        </div>`;
+
+        // Confetti + create booking in backend
+        spawnConfetti();
+        createBookingAfterPayment();
+        sessionStorage.removeItem('pendingBooking');
+
+    } else {
+        // ─── FAILED ───
+        const errorMessages = {
+            '07': 'Trừ tiền thành công. Giao dịch bị nghi ngờ (liên quan tới lừa đảo, giao dịch bất thường).',
+            '09': 'Thẻ/Tài khoản chưa đăng ký dịch vụ Internet Banking tại ngân hàng.',
+            '10': 'Xác thực thông tin thẻ/tài khoản không đúng quá 3 lần.',
+            '11': 'Đã hết hạn chờ thanh toán. Vui lòng thực hiện lại giao dịch.',
+            '12': 'Thẻ/Tài khoản bị khoá.',
+            '13': 'Quý khách nhập sai mật khẩu xác thực giao dịch (OTP).',
+            '24': 'Khách hàng hủy giao dịch.',
+            '51': 'Tài khoản không đủ số dư để thực hiện giao dịch.',
+            '65': 'Tài khoản đã vượt quá hạn mức giao dịch trong ngày.',
+            '75': 'Ngân hàng thanh toán đang bảo trì.',
+            '79': 'Nhập sai mật khẩu thanh toán quá số lần quy định.',
+            '99': 'Lỗi không xác định. Vui lòng liên hệ hỗ trợ.'
+        };
+        const errMsg = errorMessages[responseCode] || 'Giao dịch không thành công. Vui lòng thử lại.';
+
+        card.innerHTML = `
+        <div class="result-header failed">
+            <div class="status-icon-wrap sic-failed">
+                <div class="pulse-ring pr-failed"></div>
+                <div class="status-emoji">✕</div>
+            </div>
+            <div class="result-title rt-failed">Thanh toán thất bại</div>
+            <div class="result-sub">${errMsg}</div>
+        </div>
+
+        <div class="result-body">
+            <div class="detail-grid">
+                <div class="detail-row">
+                    <span class="dr-label">🅿️ Bãi xe</span>
+                    <span class="dr-value">${parkName}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="dr-label">📋 Mã GD</span>
+                    <span class="dr-value dr-txn">${shortTxn}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="dr-label">❌ Mã lỗi</span>
+                    <span class="dr-value" style="color:var(--red)">${responseCode || 'N/A'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="dr-label">🕐 Thời điểm</span>
+                    <span class="dr-value" style="font-size:12px">${displayDate}</span>
+                </div>
+            </div>
+
+            <div style="text-align:center;margin-bottom:16px">
+                <span class="badge-failed">❌ Giao dịch thất bại</span>
+            </div>
+
+            <div class="result-actions">
+                <button class="btn-primary" onclick="retryPayment()">🔄 Thử lại thanh toán</button>
+                <a href="user.html" class="btn-secondary">🗺️ Quay lại bản đồ</a>
+            </div>
+        </div>`;
+    }
+}, 1200);
+
+// ─── RETRY ─────────────────────────────────────────────────
+function retryPayment() {
+    window.location.href = 'user.html';
+}
+
+// ─── CONFETTI ──────────────────────────────────────────────
+function spawnConfetti() {
+    const container = document.getElementById('confettiContainer');
+    const colors = ['#10B981','#2563EB','#F97316','#8B5CF6','#EF4444','#06B6D4','#FCD34D'];
+    const count = 80;
+
+    for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+            const el = document.createElement('div');
+            el.className = 'confetti-piece';
+            const size = 6 + Math.random() * 8;
+            el.style.cssText = `
+                left: ${Math.random() * 100}%;
+                top: -20px;
+                width: ${size}px;
+                height: ${size}px;
+                background: ${colors[Math.floor(Math.random() * colors.length)]};
+                border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+                animation-duration: ${1.8 + Math.random() * 1.5}s;
+                animation-delay: ${Math.random() * 0.5}s;
+                opacity: 0;
+            `;
+            container.appendChild(el);
+            setTimeout(() => el.remove(), 3500);
+        }, i * 20);
+    }
+}
+
+// ─── NO PARAMS GUARD ───────────────────────────────────────
+// If no VNPay params and not demo mode, show message
+if (!responseCode && !isDemo && !booking) {
+    setTimeout(() => {
+        document.getElementById('resultCard').innerHTML = `
+        <div class="result-header pending">
+            <div class="status-icon-wrap sic-pending">
+                <div class="status-emoji">ℹ️</div>
+            </div>
+            <div class="result-title rt-pending">Không có giao dịch</div>
+            <div class="result-sub">Trang này dùng để hiển thị kết quả thanh toán từ VNPay.</div>
+        </div>
+        <div class="result-body">
+            <div class="result-actions">
+                <a href="user.html" class="btn-primary">🗺️ Về bản đồ</a>
+            </div>
+        </div>`;
+    }, 800);
+}
+</script>
+</body>
+</html>
