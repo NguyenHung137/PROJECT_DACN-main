@@ -62,28 +62,67 @@
         </select>
     </div>
 
+    <div class="input-group">
+        <label for="parkCapacity">Sức chứa (chỗ)</label>
+        <div class="input-wrap">
+            <span class="i-icon">🚗</span>
+            <input type="number" id="parkCapacity" placeholder="VD: 50" min="1" max="500">
+        </div>
+    </div>
+
     <button id="btnSave" onclick="saveParking()">💾 Lưu bãi xe mới</button>
 
     <div class="action-btns">
-        <button class="btn-dashboard" onclick="window.location.href='dashboard.html'">📊 Thống kê doanh thu</button>
+        <button class="btn-dashboard" onclick="window.location.href='dashboard.html'">📊 Doanh thu</button>
+        <button class="btn-stats" onclick="window.location.href='stats.html'">📈 Thống kê</button>
         <button class="btn-logout" onclick="logout()">🚪 Đăng xuất</button>
     </div>
 
-    <div class="section-divider" style="margin-top:16px">📋 Danh sách đặt chỗ <span id="bookingCount" class="badge">0</span></div>
+    <!-- Booking search + export -->
+    <div class="section-divider" style="margin-top:16px">
+        📋 Danh sách đặt chỗ <span id="bookingCount" class="badge">0</span>
+    </div>
+    <div class="booking-toolbar">
+        <input type="text" id="bookingSearch" placeholder="🔍 Tìm theo tên khách..." oninput="filterBookings()" class="booking-search-input">
+        <button class="btn-export-csv" onclick="exportCSV()" title="Xuất CSV">📥 CSV</button>
+    </div>
+
     <div class="booking-table-wrap">
         <table id="bookingTable">
             <thead>
-                <tr><th>Khách hàng</th><th>Bãi xe</th><th>Hành động</th></tr>
+                <tr>
+                    <th>Khách hàng</th>
+                    <th>Bãi xe</th>
+                    <th>Thời gian</th>
+                    <th>Hành động</th>
+                </tr>
             </thead>
             <tbody id="bookingTableBody">
-                <tr><td colspan="3" style="color:#94a3b8;text-align:center;padding:20px">Đang tải...</td></tr>
+                <tr><td colspan="4" style="color:#94a3b8;text-align:center;padding:20px">Đang tải...</td></tr>
             </tbody>
         </table>
     </div>
 </div>
 
-<div id="map"></div>
+<!-- EDIT MODAL -->
+<div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(10,22,40,0.5);z-index:999;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+    <div style="background:white;border-radius:20px;padding:32px;width:90%;max-width:400px;box-shadow:0 30px 80px rgba(10,22,40,.3);">
+        <h3 style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;color:#0A1628;margin-bottom:20px">✏️ Sửa bãi xe</h3>
+        <label style="font-size:13px;font-weight:600;color:#1E293B;display:block;margin-bottom:6px">Tên bãi xe</label>
+        <input id="editParkName" type="text" style="width:100%;padding:12px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:15px;font-family:'Be Vietnam Pro',sans-serif;outline:none;margin-bottom:14px">
+        <label style="font-size:13px;font-weight:600;color:#1E293B;display:block;margin-bottom:6px">Trạng thái</label>
+        <select id="editParkStatus" style="width:100%;padding:12px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:14px;font-family:'Be Vietnam Pro',sans-serif;outline:none;margin-bottom:20px">
+            <option value="available">✅ Còn chỗ</option>
+            <option value="full">❌ Đầy chỗ</option>
+        </select>
+        <div style="display:flex;gap:10px">
+            <button onclick="closeEditModal()" style="flex:1;padding:12px;border:1.5px solid #E2E8F0;border-radius:10px;background:white;color:#64748B;font-family:'Be Vietnam Pro',sans-serif;font-size:14px;font-weight:600;cursor:pointer">Hủy</button>
+            <button onclick="saveEdit()" style="flex:2;padding:12px;background:#2563EB;color:white;border:none;border-radius:10px;font-family:'Be Vietnam Pro',sans-serif;font-size:14px;font-weight:700;cursor:pointer">💾 Lưu thay đổi</button>
+        </div>
+    </div>
+</div>
 
+<div id="map"></div>
 <script src="script.js"></script>
 </body>
 </html>

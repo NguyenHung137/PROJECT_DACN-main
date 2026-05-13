@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkFinder – Thống kê hệ thống</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --navy:#0A1628; --blue:#2563EB; --blue2:#3B82F6;
+            --orange:#F97316; --green:#10B981; --red:#EF4444;
+            --purple:#8B5CF6; --teal:#06B6D4; --light:#F8FAFC;
+            --text:#1E293B; --muted:#64748B; --border:#E2E8F0;
+        }
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'Be Vietnam Pro',sans-serif;background:var(--light);color:var(--text);min-height:100vh;}
+
+        /* TOPBAR */
+        .topbar{background:var(--navy);color:white;padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:64px;box-shadow:0 2px 20px rgba(10,22,40,0.3);}
+        .tb-left{display:flex;align-items:center;gap:20px;}
+        .back-btn{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:14px;font-weight:500;padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);transition:all .2s;}
+        .back-btn:hover{background:rgba(255,255,255,0.1);color:white;}
+        .tb-brand{font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;letter-spacing:-0.5px;}
+        .tb-brand span{color:var(--orange);}
+        .tb-time{color:rgba(255,255,255,0.45);font-size:13px;}
+
+        /* HERO BANNER */
+        .hero-banner{
+            background:linear-gradient(135deg,var(--navy) 0%,#1e3a5f 100%);
+            padding:40px;
+            position:relative;overflow:hidden;
+        }
+        .hero-banner::before{
+            content:'';position:absolute;inset:0;
+            background:radial-gradient(ellipse 60% 80% at 80% 50%,rgba(37,99,235,0.2),transparent);
+        }
+        .hero-content{position:relative;z-index:1;}
+        .hero-label{display:inline-flex;align-items:center;gap:8px;background:rgba(37,99,235,0.25);border:1px solid rgba(59,130,246,0.4);color:#93C5FD;padding:5px 14px;border-radius:50px;font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:14px;}
+        .hero-title{font-family:'Outfit',sans-serif;font-size:36px;font-weight:900;color:white;letter-spacing:-1px;margin-bottom:6px;}
+        .hero-sub{font-size:15px;color:rgba(255,255,255,0.55);}
+
+        /* MAIN */
+        .main{max-width:1200px;margin:0 auto;padding:32px 24px;}
+
+        /* BIG STATS GRID */
+        .big-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+        .bstat{
+            background:white;border-radius:20px;padding:24px;
+            border:1px solid var(--border);
+            transition:all .3s;
+            animation:fadeUp .5s ease both;
+            position:relative;overflow:hidden;
+        }
+        .bstat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:3px 3px 0 0;}
+        .bstat.blue::before{background:var(--blue);}
+        .bstat.green::before{background:var(--green);}
+        .bstat.orange::before{background:var(--orange);}
+        .bstat.purple::before{background:var(--purple);}
+        .bstat:hover{transform:translateY(-6px);box-shadow:0 20px 50px rgba(10,22,40,0.12);border-color:transparent;}
+        .bstat-icon{font-size:32px;margin-bottom:14px;}
+        .bstat-val{font-family:'Outfit',sans-serif;font-size:32px;font-weight:900;color:var(--navy);line-height:1;}
+        .bstat-label{font-size:13px;color:var(--muted);margin-top:6px;font-weight:500;}
+        .bstat-sub{font-size:12px;font-weight:700;margin-top:8px;display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;}
+        .bstat-sub.up{background:rgba(16,185,129,0.1);color:var(--green);}
+        .bstat-sub.neutral{background:rgba(100,116,139,0.1);color:var(--muted);}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+        .bstat:nth-child(2){animation-delay:.1s;} .bstat:nth-child(3){animation-delay:.2s;} .bstat:nth-child(4){animation-delay:.3s;}
+
+        /* CHARTS */
+        .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+        .chart-card{background:white;border-radius:16px;border:1px solid var(--border);padding:24px;animation:fadeUp .5s ease .2s both;}
+        .chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+        .chart-title{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:var(--navy);}
+        .chart-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+
+        /* SYSTEM INFO GRID */
+        .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+        .info-card{background:white;border-radius:16px;border:1px solid var(--border);padding:24px;animation:fadeUp .5s ease .3s both;}
+        .info-card-title{font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:var(--navy);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+        .info-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--light);font-size:14px;}
+        .info-row:last-child{border-bottom:none;}
+        .info-key{color:var(--muted);font-weight:500;}
+        .info-val{font-weight:700;color:var(--navy);}
+        .badge-online{display:inline-flex;align-items:center;gap:5px;background:rgba(16,185,129,0.1);color:var(--green);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700;}
+        .badge-online::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.4s ease infinite;}
+        @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.2;}}
+
+        /* PARKING LIST */
+        .park-list{background:white;border-radius:16px;border:1px solid var(--border);overflow:hidden;animation:fadeUp .5s ease .35s both;}
+        .park-list-header{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--border);background:var(--light);}
+        .park-list-title{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:var(--navy);}
+        .park-item{display:flex;align-items:center;gap:16px;padding:14px 24px;border-bottom:1px solid var(--light);transition:background .15s;}
+        .park-item:last-child{border-bottom:none;}
+        .park-item:hover{background:#f8fafc;}
+        .park-item-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+        .pi-avail{background:rgba(16,185,129,0.1);}
+        .pi-full{background:rgba(239,68,68,0.1);}
+        .park-item-name{flex:1;font-weight:700;font-size:14px;color:var(--navy);}
+        .park-item-id{font-size:11px;color:var(--muted);margin-top:2px;}
+        .status-pill{padding:4px 12px;border-radius:50px;font-size:12px;font-weight:700;}
+        .sp-avail{background:rgba(16,185,129,0.1);color:var(--green);}
+        .sp-full{background:rgba(239,68,68,0.1);color:var(--red);}
+
+        @media(max-width:900px){
+            .big-stats{grid-template-columns:repeat(2,1fr);}
+            .charts-grid,.info-grid{grid-template-columns:1fr;}
+            .topbar{padding:0 20px;}
+            .hero-banner{padding:24px 20px;}
+            .hero-title{font-size:26px;}
+        }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="tb-left">
+        <a href="index.html" class="back-btn">← Quay lại</a>
+        <div class="tb-brand">Park<span>Finder</span></div>
+    </div>
+    <div class="tb-time" id="clockDisplay"></div>
+</div>
+
+<div class="hero-banner">
+    <div class="hero-content">
+        <div class="hero-label">📈 SYSTEM ANALYTICS</div>
+        <div class="hero-title">Thống kê tổng quan hệ thống</div>
+        <div class="hero-sub">Dữ liệu real-time từ toàn bộ hệ thống ParkFinder</div>
+    </div>
+</div>
+
+<div class="main">
+    <!-- BIG STATS -->
+    <div class="big-stats">
+        <div class="bstat blue">
+            <div class="bstat-icon">🅿️</div>
+            <div class="bstat-val" id="sTotalLots">—</div>
+            <div class="bstat-label">Tổng bãi xe</div>
+            <div class="bstat-sub neutral" id="sLotSub">Đang tải...</div>
+        </div>
+        <div class="bstat green">
+            <div class="bstat-icon">✅</div>
+            <div class="bstat-val" id="sAvailLots">—</div>
+            <div class="bstat-label">Bãi còn chỗ</div>
+            <div class="bstat-sub up" id="sAvailPct">—</div>
+        </div>
+        <div class="bstat orange">
+            <div class="bstat-icon">📋</div>
+            <div class="bstat-val" id="sTotalBook">—</div>
+            <div class="bstat-label">Tổng đặt chỗ</div>
+            <div class="bstat-sub neutral">Tất cả thời gian</div>
+        </div>
+        <div class="bstat purple">
+            <div class="bstat-icon">💰</div>
+            <div class="bstat-val" id="sTotalRev">—</div>
+            <div class="bstat-label">Tổng doanh thu</div>
+            <div class="bstat-sub up">VNĐ</div>
+        </div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="charts-grid">
+        <div class="chart-card">
+            <div class="chart-header">
+                <div>
+                    <div class="chart-title">Tình trạng bãi xe</div>
+                    <div class="chart-sub">Còn chỗ vs Đầy chỗ</div>
+                </div>
+            </div>
+            <canvas id="chartStatus" height="220"></canvas>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header">
+                <div>
+                    <div class="chart-title">Doanh thu theo bãi</div>
+                    <div class="chart-sub">Top bãi xe hoạt động tốt nhất</div>
+                </div>
+            </div>
+            <canvas id="chartTopLots" height="220"></canvas>
+        </div>
+    </div>
+
+    <!-- INFO + PARKING LIST -->
+    <div class="info-grid">
+        <div class="info-card">
+            <div class="info-card-title">🖥️ Thông tin hệ thống</div>
+            <div class="info-row"><span class="info-key">Tên hệ thống</span><span class="info-val">ParkFinder v2.0</span></div>
+            <div class="info-row"><span class="info-key">Trạng thái backend</span><span class="info-val"><span class="badge-online">Online</span></span></div>
+            <div class="info-row"><span class="info-key">API endpoint</span><span class="info-val" style="font-size:12px;color:var(--muted)">localhost:8080</span></div>
+            <div class="info-row"><span class="info-key">Giá đỗ xe</span><span class="info-val">20.000 VNĐ/giờ</span></div>
+            <div class="info-row"><span class="info-key">Cổng thanh toán</span><span class="info-val">VNPay Sandbox</span></div>
+            <div class="info-row"><span class="info-key">Bản đồ</span><span class="info-val">Mapbox GL JS v2.15</span></div>
+            <div class="info-row"><span class="info-key">AI/ML Model</span><span class="info-val">Logistic Regression</span></div>
+            <div class="info-row"><span class="info-key">Thời gian hiện tại</span><span class="info-val" id="sysTime">—</span></div>
+        </div>
+        <div class="info-card">
+            <div class="info-card-title">📊 Thống kê booking</div>
+            <div class="info-row"><span class="info-key">Đặt chỗ đang hoạt động</span><span class="info-val" id="sActiveBook">—</span></div>
+            <div class="info-row"><span class="info-key">Doanh thu trung bình/lượt</span><span class="info-val" id="sAvgRev">—</span></div>
+            <div class="info-row"><span class="info-key">Bãi xe hoạt động</span><span class="info-val" id="sActiveRatio">—</span></div>
+            <div class="info-row"><span class="info-key">Tổng bãi đầy chỗ</span><span class="info-val" id="sFullLots">—</span></div>
+            <div class="info-row"><span class="info-key">Thanh toán VNPay</span><span class="info-val" id="sVnpay">—</span></div>
+            <div class="info-row"><span class="info-key">Thanh toán tiền mặt</span><span class="info-val" id="sCash">—</span></div>
+        </div>
+    </div>
+
+    <!-- PARKING LIST -->
+    <div class="park-list">
+        <div class="park-list-header">
+            <div class="park-list-title">🏢 Danh sách bãi xe</div>
+            <span style="font-size:13px;color:var(--muted)" id="parkListCount">Đang tải...</span>
+        </div>
+        <div id="parkListBody">
+            <div style="padding:40px;text-align:center;color:var(--muted)">⏳ Đang tải...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+if (sessionStorage.getItem('adminLoggedIn') !== 'true') window.location.href = 'login.html?role=admin';
+
+let statusChart = null, topLotsChart = null;
+
+function updateClock() {
+    const now = new Date();
+    document.getElementById('clockDisplay').textContent = now.toLocaleTimeString('vi-VN');
+    document.getElementById('sysTime').textContent = now.toLocaleString('vi-VN');
+}
+updateClock(); setInterval(updateClock, 1000);
+
+async function loadStats() {
+    try {
+        const [lotsRes, bookRes] = await Promise.all([
+            fetch('http://localhost:8080/api/parking/all'),
+            fetch('http://localhost:8080/api/booking/revenue-stats')
+        ]);
+        const lots = await lotsRes.json();
+        const bookings = await bookRes.json();
+
+        // Lots stats
+        const total = lots.length;
+        const avail = lots.filter(l => l.status === 'available').length;
+        const full = total - avail;
+        const pct = total ? Math.round(avail/total*100) : 0;
+
+        document.getElementById('sTotalLots').textContent = total;
+        document.getElementById('sAvailLots').textContent = avail;
+        document.getElementById('sLotSub').textContent = `${full} đang đầy chỗ`;
+        document.getElementById('sAvailPct').textContent = `${pct}% sẵn sàng`;
+        document.getElementById('sFullLots').textContent = full;
+        document.getElementById('sActiveRatio').textContent = `${avail}/${total}`;
+
+        // Booking stats
+        const totalRev = bookings.reduce((s,b) => s + (b.totalPrice||0), 0);
+        const avgRev = bookings.length ? Math.round(totalRev/bookings.length) : 0;
+        const vnpay = bookings.filter(b => b.paymentMethod && b.paymentMethod.includes('vnpay')).length;
+        const cash = bookings.length - vnpay;
+
+        document.getElementById('sTotalBook').textContent = bookings.length;
+        document.getElementById('sTotalRev').textContent = (totalRev/1000000).toFixed(1) + 'M';
+        document.getElementById('sActiveBook').textContent = bookings.length;
+        document.getElementById('sAvgRev').textContent = avgRev.toLocaleString('vi-VN') + ' VNĐ';
+        document.getElementById('sVnpay').textContent = vnpay + ' lượt';
+        document.getElementById('sCash').textContent = cash + ' lượt';
+
+        // Status chart
+        if (statusChart) statusChart.destroy();
+        statusChart = new Chart(document.getElementById('chartStatus'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Còn chỗ', 'Đầy chỗ'],
+                datasets: [{ data: [avail, full],
+                    backgroundColor: ['#10B981','#EF4444'],
+                    borderWidth: 3, borderColor: '#fff' }]
+            },
+            options: { responsive: true, cutout: '65%',
+                plugins: { legend: { position: 'bottom', labels: { font:{size:13}, padding:16 } } } }
+        });
+
+        // Top lots chart
+        const byLot = {};
+        bookings.forEach(b => {
+            const name = b.parkingLotName || ('Bãi #'+b.parkingLotId);
+            byLot[name] = (byLot[name]||0) + (b.totalPrice||0);
+        });
+        const topLots = Object.entries(byLot).sort((a,b)=>b[1]-a[1]).slice(0,8);
+        if (topLotsChart) topLotsChart.destroy();
+        topLotsChart = new Chart(document.getElementById('chartTopLots'), {
+            type: 'bar',
+            data: {
+                labels: topLots.map(([k]) => k.length>18?k.substring(0,18)+'...':k),
+                datasets: [{ label:'Doanh thu', data: topLots.map(([,v])=>v),
+                    backgroundColor: topLots.map((_,i)=>`hsla(${200+i*20},75%,${55-i*2}%,0.85)`),
+                    borderRadius: 8, borderSkipped: false }]
+            },
+            options: { responsive:true, indexAxis:'y',
+                plugins:{ legend:{display:false} },
+                scales: { x:{ beginAtZero:true, ticks:{callback:v=>v>0?(v/1000).toFixed(0)+'K':'0', font:{size:10}}, grid:{color:'#F1F5F9'} },
+                    y:{ grid:{display:false}, ticks:{font:{size:11}} } } }
+        });
+
+        // Parking list
+        document.getElementById('parkListCount').textContent = total + ' bãi xe';
+        document.getElementById('parkListBody').innerHTML = lots.map(l => {
+            const isAvail = l.status === 'available';
+            return `<div class="park-item">
+                <div class="park-item-icon ${isAvail?'pi-avail':'pi-full'}">${isAvail?'✅':'❌'}</div>
+                <div>
+                    <div class="park-item-name">${l.name}</div>
+                    <div class="park-item-id">ID: ${l.id} · ${l.latitude?.toFixed(4)}, ${l.longitude?.toFixed(4)}</div>
+                </div>
+                <span class="status-pill ${isAvail?'sp-avail':'sp-full'}">${isAvail?'Còn chỗ':'Hết chỗ'}</span>
+            </div>`;
+        }).join('');
+
+    } catch (err) {
+        console.error('Stats error:', err);
+    }
+}
+
+loadStats();
+setInterval(loadStats, 30000);
+</script>
+</body>
+</html>

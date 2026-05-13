@@ -591,4 +591,357 @@ function showToast(msg, type = '') {
 map.on('load', () => {
     loadUserMarkers();
     setInterval(loadUserMarkers, 30000);
+    setInterval(updateViewportStats, 5000);
+    map.on('moveend', updateViewportStats);
 });
+
+// ─── 13. RADIUS FILTER ───────────────────────────────────────
+let currentRadius = 0;
+let userLatLng = null;
+
+function setRadius(r) {
+    currentRadius = r;
+    document.querySelectorAll('.rbtn').forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.r) === r);
+    });
+    loadUserMarkers();
+}
+
+function getDistanceKm(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Patch loadUserMarkers to support radius filter
+const _origLoadUserMarkers = loadUserMarkers;
+// Override in place below
+
+// ─── 14. FIND NEAREST ───────────────────────────────────────
+function findNearest() {
+    if (!navigator.geolocation) { showToast('Trình duyệt không hỗ trợ định vị', 'red'); return; }
+    const btn = document.getElementById('btnNearest');
+    btn.textContent = '⏳ Đang tìm...';
+    btn.disabled = true;
+
+    navigator.geolocation.getCurrentPosition(pos => {
+        const { longitude: lng, latitude: lat } = pos.coords;
+        userLatLng = { lat, lng };
+
+        fetch('http://localhost:8080/api/parking/all')
+            .then(r => r.json())
+            .then(lots => {
+                const available = lots.filter(p => p.status === 'available');
+                if (!available.length) { showToast('Không có bãi xe nào còn chỗ', 'red'); return; }
+                let nearest = null, minDist = Infinity;
+                available.forEach(p => {
+                    const d = getDistanceKm(lat, lng, p.latitude, p.longitude);
+                    if (d < minDist) { minDist = d; nearest = p; }
+                });
+                if (nearest) {
+                    map.flyTo({ center: [nearest.longitude, nearest.latitude], zoom: 17, speed: 1.6 });
+                    showToast(`🎯 Bãi gần nhất: ${nearest.name} (${(minDist*1000).toFixed(0)}m)`, 'green');
+                    allMarkers.forEach(m => {
+                        if (m._parkId === nearest.id) {
+                            setTimeout(() => m.getPopup() && m.togglePopup(), 800);
+                        }
+                    });
+                }
+            })
+            .catch(() => showToast('Không thể tải dữ liệu', 'red'))
+            .finally(() => { btn.textContent = '🎯 Gần nhất'; btn.disabled = false; });
+    }, () => { showToast('Không thể lấy vị trí', 'red'); btn.textContent = '🎯 Gần nhất'; btn.disabled = false; });
+}
+
+// ─── 15. FAVORITES ───────────────────────────────────────────
+function getFavorites() {
+    try { return JSON.parse(localStorage.getItem('pkf_favorites') || '[]'); } catch { return []; }
+}
+function saveFavorites(favs) {
+    localStorage.setItem('pkf_favorites', JSON.stringify(favs));
+    const hasFavs = favs.length > 0;
+    document.getElementById('btnFavorites').classList.toggle('has-favs', hasFavs);
+}
+function isFavorite(id) { return getFavorites().some(f => f.id === id); }
+
+function toggleFavorite(park) {
+    let favs = getFavorites();
+    if (isFavorite(park.id)) {
+        favs = favs.filter(f => f.id !== park.id);
+        showToast('Đã xóa khỏi yêu thích', '');
+    } else {
+        favs.push({ id: park.id, name: park.name, latitude: park.latitude, longitude: park.longitude, status: park.status });
+        showToast('⭐ Đã thêm vào yêu thích!', 'green');
+    }
+    saveFavorites(favs);
+    updateFavBtns(park.id);
+}
+
+function updateFavBtns(id) {
+    const fav = isFavorite(id);
+    document.querySelectorAll(`.pk-btn-fav[data-id="${id}"]`).forEach(b => {
+        b.classList.toggle('is-fav', fav);
+        b.title = fav ? 'Bỏ yêu thích' : 'Thêm yêu thích';
+        b.textContent = fav ? '⭐' : '☆';
+    });
+    const mfb = document.getElementById('modalFavBtn');
+    if (mfb && bookingParkId === id) {
+        mfb.classList.toggle('is-fav', fav);
+        document.getElementById('modalFavIcon').textContent = fav ? '⭐' : '☆';
+        mfb.childNodes[1].textContent = fav ? ' Đã yêu thích' : ' Thêm vào yêu thích';
+    }
+}
+
+function toggleFavorites() {
+    const sb = document.getElementById('favoritesSidebar');
+    const ov = document.getElementById('favoritesOverlay');
+    const isOpen = sb.classList.contains('open');
+    sb.classList.toggle('open', !isOpen);
+    ov.classList.toggle('show', !isOpen);
+    if (!isOpen) renderFavorites();
+}
+
+function renderFavorites() {
+    const favs = getFavorites();
+    const list = document.getElementById('favoritesList');
+    if (!favs.length) { list.innerHTML = '<div class="history-empty">⭐ Chưa có bãi xe yêu thích</div>'; return; }
+    list.innerHTML = favs.map((f, i) => `
+    <div class="fav-item" style="animation-delay:${i*0.05}s">
+        <div class="fav-icon">🅿️</div>
+        <div class="fav-info">
+            <div class="fav-name">${f.name}</div>
+            <div class="fav-status ${f.status === 'available' ? 'available' : 'full'}">
+                ${f.status === 'available' ? '✅ Còn chỗ' : '❌ Hết chỗ'}
+            </div>
+        </div>
+        <div class="fav-actions">
+            <button class="fav-btn-go" onclick="flyToFav(${f.longitude},${f.latitude},'${f.name.replace(/'/g,"\\'")}')">🗺️ Đến</button>
+            <button class="fav-btn-remove" onclick="removeFav(${f.id})">🗑️ Xóa</button>
+        </div>
+    </div>`).join('');
+}
+
+function flyToFav(lng, lat, name) {
+    toggleFavorites();
+    map.flyTo({ center: [lng, lat], zoom: 17, speed: 1.5 });
+    showToast(`📍 Đang đến ${name}`, 'green');
+}
+function removeFav(id) {
+    saveFavorites(getFavorites().filter(f => f.id !== id));
+    renderFavorites();
+    updateFavBtns(id);
+}
+
+function toggleFavoriteFromModal() {
+    if (!bookingParkId) return;
+    const park = allParkings.find(p => p.id === bookingParkId);
+    if (park) toggleFavorite(park);
+}
+
+// ─── 16. COMPARE ─────────────────────────────────────────────
+let compareList = [];
+
+function addToCompare(park) {
+    if (compareList.find(p => p.id === park.id)) {
+        compareList = compareList.filter(p => p.id !== park.id);
+        showToast('Đã xóa khỏi so sánh', '');
+    } else if (compareList.length >= 3) {
+        showToast('Chỉ so sánh tối đa 3 bãi xe', 'red'); return;
+    } else {
+        compareList.push(park);
+        showToast(`➕ Đã thêm "${park.name}" vào so sánh`, 'green');
+    }
+    updateCompareUI();
+}
+
+function updateCompareUI() {
+    const n = compareList.length;
+    document.getElementById('compareCount').textContent = `So sánh: ${n}/3`;
+    const btn = document.getElementById('btnCompare');
+    btn.disabled = n < 2;
+    document.getElementById('btnClearCompare').style.display = n > 0 ? 'inline-block' : 'none';
+    document.querySelectorAll('.pk-btn-compare').forEach(b => {
+        const id = parseInt(b.dataset.id);
+        b.classList.toggle('in-compare', compareList.some(p => p.id === id));
+    });
+}
+
+function clearCompare() { compareList = []; updateCompareUI(); }
+
+function openCompare() {
+    if (compareList.length < 2) return;
+    const drawer = document.getElementById('compareDrawer');
+    const ov = document.getElementById('compareOverlay');
+    drawer.classList.add('open');
+    ov.classList.add('show');
+    renderCompare();
+}
+function closeCompare() {
+    document.getElementById('compareDrawer').classList.remove('open');
+    document.getElementById('compareOverlay').classList.remove('show');
+}
+
+function renderCompare() {
+    const colors = ['#2563EB','#10B981','#F97316'];
+    document.getElementById('compareContent').innerHTML = compareList.map((p, i) => {
+        let dist = '—';
+        if (userLatLng) {
+            const d = getDistanceKm(userLatLng.lat, userLatLng.lng, p.latitude, p.longitude);
+            dist = d < 1 ? `${(d*1000).toFixed(0)}m` : `${d.toFixed(1)}km`;
+        }
+        const pred = p._pred || {};
+        const probPct = Math.round((pred.full_probability || 0) * 100);
+        const isAvail = p.status === 'available';
+        return `<div class="compare-card">
+            <div class="cc-name"><span class="compare-pick-indicator" style="background:${colors[i]}"></span>${p.name}</div>
+            <div class="cc-row"><span class="cc-key">Trạng thái</span><span class="cc-val ${isAvail?'green':'red'}">${isAvail?'✅ Còn chỗ':'❌ Hết chỗ'}</span></div>
+            <div class="cc-row"><span class="cc-key">Khoảng cách</span><span class="cc-val orange">${dist}</span></div>
+            <div class="cc-row"><span class="cc-key">Giá/giờ</span><span class="cc-val">20.000 VNĐ</span></div>
+            <div class="cc-row"><span class="cc-key">AI dự báo đầy</span><span class="cc-val ${probPct>70?'red':probPct>40?'orange':'green'}">${probPct}%</span></div>
+            <div class="cc-row"><span class="cc-key">Tọa độ</span><span class="cc-val" style="font-size:11px">${p.latitude.toFixed(4)}, ${p.longitude.toFixed(4)}</span></div>
+        </div>`;
+    }).join('');
+}
+
+// ─── 17. SHARE ───────────────────────────────────────────────
+function shareParking() {
+    if (!bookingParkId) return;
+    const park = allParkings.find(p => p.id === bookingParkId);
+    if (!park) return;
+    const url = `https://www.google.com/maps?q=${park.latitude},${park.longitude}`;
+    const text = `🅿️ ${park.name}\n📍 ${url}`;
+    if (navigator.share) {
+        navigator.share({ title: park.name, text: `ParkFinder – ${park.name}`, url });
+    } else {
+        navigator.clipboard.writeText(text).then(() => showToast('📋 Đã copy link chia sẻ!', 'green'));
+    }
+}
+
+// ─── 18. VIEWPORT STATS ──────────────────────────────────────
+function updateViewportStats() {
+    if (!map || !allParkings.length) return;
+    const bounds = map.getBounds();
+    let avail = 0, full = 0;
+    allParkings.forEach(p => {
+        if (bounds.contains([p.longitude, p.latitude])) {
+            p.status === 'available' ? avail++ : full++;
+        }
+    });
+    document.getElementById('vsAvail').textContent = avail;
+    document.getElementById('vsFull').textContent = full;
+}
+
+// ─── 19. HEATMAP ─────────────────────────────────────────────
+function toggleHeatmapLayer() {
+    const on = document.getElementById('toggleHeatmap').checked;
+    if (on) {
+        if (!map.getSource('heatmap-src')) {
+            const features = allParkings.map(p => ({
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: [p.longitude, p.latitude] },
+                properties: { weight: p.status === 'full' ? 1 : 0.4 }
+            }));
+            map.addSource('heatmap-src', { type: 'geojson', data: { type: 'FeatureCollection', features } });
+            map.addLayer({
+                id: 'heatmap-layer', type: 'heatmap', source: 'heatmap-src',
+                paint: {
+                    'heatmap-weight': ['get','weight'],
+                    'heatmap-intensity': 1.2,
+                    'heatmap-color': ['interpolate',['linear'],['heatmap-density'],
+                        0,'rgba(16,185,129,0)', 0.3,'rgba(16,185,129,0.5)', 0.7,'rgba(249,115,22,0.8)', 1,'rgba(239,68,68,1)'],
+                    'heatmap-radius': 40,
+                    'heatmap-opacity': 0.75
+                }
+            });
+        } else {
+            map.setLayoutProperty('heatmap-layer', 'visibility', 'visible');
+        }
+        showToast('🔥 Heatmap đã bật', 'green');
+    } else {
+        if (map.getLayer('heatmap-layer')) map.setLayoutProperty('heatmap-layer', 'visibility', 'none');
+        showToast('Heatmap đã tắt', '');
+    }
+}
+
+// ─── 20. PATCH loadUserMarkers (radius + store allParkings) ──
+let allParkings = [];
+
+function loadUserMarkers() {
+    const showOnlyAvailable = document.getElementById('filterAvailable').checked;
+    allMarkers.forEach(m => m.remove());
+    allMarkers = [];
+
+    fetch('http://localhost:8080/api/parking/all')
+        .then(res => res.json())
+        .then(parkings => {
+            allParkings = parkings;
+            updateViewportStats();
+            saveFavorites(getFavorites().map(f => {
+                const live = parkings.find(p => p.id === f.id);
+                return live ? { ...f, status: live.status } : f;
+            }));
+
+            parkings.forEach(async park => {
+                if (showOnlyAvailable && park.status !== 'available') return;
+                if (currentRadius > 0 && userLatLng) {
+                    const d = getDistanceKm(userLatLng.lat, userLatLng.lng, park.latitude, park.longitude);
+                    if (d * 1000 > currentRadius) return;
+                }
+
+                const isAvail = park.status === 'available';
+                const color = isAvail ? '#10B981' : '#EF4444';
+                const pred = await getPrediction(park.id);
+                park._pred = pred;
+                const probPercent = Math.round(pred.full_probability * 100);
+                const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${park.latitude},${park.longitude}`;
+                const fav = isFavorite(park.id);
+                const inCmp = compareList.some(p => p.id === park.id);
+
+                const popupHTML = `
+                <div class="pk-popup-header">
+                    <h4>${park.name}</h4>
+                    <div class="pk-status ${isAvail ? 'pk-available' : 'pk-full'}">${isAvail ? 'Còn chỗ' : 'Hết chỗ'}</div>
+                </div>
+                <div class="pk-popup-body">
+                    <div class="pk-pred">🔮 Dự báo 30p tới: ${probPercent}% đầy</div>
+                    <div class="pk-rec">${pred.recommendation}</div>
+                    <div class="pk-actions">
+                        <button class="pk-btn-dir" onclick="window.open('${googleMapsUrl}','_blank')">🗺️ Chỉ đường</button>
+                        <button class="pk-btn-fav ${fav?'is-fav':''}" data-id="${park.id}" onclick="toggleFavorite({id:${park.id},name:'${park.name.replace(/'/g,"\\'")}',latitude:${park.latitude},longitude:${park.longitude},status:'${park.status}'})" title="${fav?'Bỏ yêu thích':'Thêm yêu thích'}">${fav?'⭐':'☆'}</button>
+                        <button class="pk-btn-compare ${inCmp?'in-compare':''}" data-id="${park.id}" onclick="addToCompare({id:${park.id},name:'${park.name.replace(/'/g,"\\'")}',latitude:${park.latitude},longitude:${park.longitude},status:'${park.status}',_pred:${JSON.stringify(pred)}})">⚖️</button>
+                        ${isAvail
+                            ? `<button class="pk-btn-book" onclick="openBookingModal(${park.id},'${park.name.replace(/'/g,"\\'")}')">💳 Đặt</button>`
+                            : `<div class="pk-btn-disabled">❌ Hết</div>`
+                        }
+                    </div>
+                </div>`;
+
+                const marker = new mapboxgl.Marker({ color })
+                    .setLngLat([park.longitude, park.latitude])
+                    .setPopup(new mapboxgl.Popup({ offset: 12, maxWidth: '280px' }).setHTML(popupHTML))
+                    .addTo(map);
+
+                marker._parkId = park.id;
+                allMarkers.push(marker);
+            });
+            // Update heatmap source if active
+            if (map.getSource('heatmap-src')) {
+                const features = parkings.map(p => ({
+                    type: 'Feature',
+                    geometry: { type: 'Point', coordinates: [p.longitude, p.latitude] },
+                    properties: { weight: p.status === 'full' ? 1 : 0.4 }
+                }));
+                map.getSource('heatmap-src').setData({ type: 'FeatureCollection', features });
+            }
+        })
+        .catch(err => { console.error(err); showToast('Không thể tải dữ liệu bãi xe', 'red'); });
+}
+
+// Init favorites badge
+(function initFavBadge() {
+    const favs = getFavorites();
+    if (favs.length) document.getElementById('btnFavorites').classList.add('has-favs');
+    document.querySelectorAll('.rbtn')[0]?.classList.add('active');
+})();

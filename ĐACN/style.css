@@ -197,3 +197,38 @@ select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0
     font-family: 'Be Vietnam Pro', sans-serif !important;
 }
 .mapboxgl-ctrl-geocoder--icon-search { fill: var(--muted) !important; left: 14px !important; }
+
+/* ─── NEW ADMIN STYLES ─── */
+.btn-stats {
+    width: 100%; padding: 11px; background: #8B5CF6; color: white;
+    border: none; border-radius: 10px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 13px; font-weight: 700; cursor: pointer; transition: all .2s;
+}
+.btn-stats:hover { background: #7C3AED; transform: translateY(-1px); }
+
+.booking-toolbar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 12px 8px;
+}
+.booking-search-input {
+    flex: 1; padding: 8px 12px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    font-family: 'Be Vietnam Pro', sans-serif; font-size: 13px;
+    color: var(--text); outline: none; background: var(--light);
+    transition: all .2s;
+}
+.booking-search-input:focus { border-color: var(--blue); background: white; box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+
+.btn-export-csv {
+    padding: 8px 12px; background: #10B981; color: white;
+    border: none; border-radius: 8px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    white-space: nowrap; transition: all .2s;
+}
+.btn-export-csv:hover { background: #059669; transform: translateY(-1px); }
+
+/* Number input styling */
+.input-wrap input[type="number"] { padding-left: 38px; }
+

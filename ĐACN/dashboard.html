@@ -8,178 +8,140 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         :root {
-            --navy:   #0A1628;
-            --blue:   #2563EB;
-            --blue2:  #3B82F6;
-            --orange: #F97316;
-            --green:  #10B981;
-            --red:    #EF4444;
-            --purple: #8B5CF6;
-            --light:  #F8FAFC;
-            --text:   #1E293B;
-            --muted:  #64748B;
-            --border: #E2E8F0;
+            --navy:   #0A1628; --blue:   #2563EB; --blue2:  #3B82F6;
+            --orange: #F97316; --green:  #10B981; --red:    #EF4444;
+            --purple: #8B5CF6; --light:  #F8FAFC; --text:   #1E293B;
+            --muted:  #64748B; --border: #E2E8F0;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Be Vietnam Pro', sans-serif;
-            background: var(--light); color: var(--text);
-            min-height: 100vh;
-        }
+        body { font-family: 'Be Vietnam Pro', sans-serif; background: var(--light); color: var(--text); min-height: 100vh; }
 
-        /* ─── TOPBAR ─── */
+        /* TOPBAR */
         .topbar {
             background: var(--navy); color: white;
-            padding: 0 40px;
-            display: flex; align-items: center; justify-content: space-between;
-            height: 64px;
-            box-shadow: 0 2px 20px rgba(10,22,40,0.3);
+            padding: 0 40px; display: flex; align-items: center; justify-content: space-between;
+            height: 64px; box-shadow: 0 2px 20px rgba(10,22,40,0.3);
         }
         .tb-left { display: flex; align-items: center; gap: 20px; }
         .back-btn {
             display: flex; align-items: center; gap: 8px;
             color: rgba(255,255,255,0.7); text-decoration: none;
-            font-size: 14px; font-weight: 500;
-            padding: 8px 14px; border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.15);
-            transition: all .2s;
+            font-size: 14px; font-weight: 500; padding: 8px 14px;
+            border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); transition: all .2s;
         }
         .back-btn:hover { background: rgba(255,255,255,0.1); color: white; }
-        .tb-brand {
-            font-family: 'Outfit', sans-serif;
-            font-size: 20px; font-weight: 800; letter-spacing: -0.5px;
-        }
+        .tb-brand { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
         .tb-brand span { color: var(--orange); }
-        .tb-title {
-            font-size: 14px; color: rgba(255,255,255,0.5);
-            border-left: 1px solid rgba(255,255,255,0.2); padding-left: 16px;
-        }
+        .tb-title { font-size: 14px; color: rgba(255,255,255,0.5); border-left: 1px solid rgba(255,255,255,0.2); padding-left: 16px; }
         .tb-right { display: flex; align-items: center; gap: 10px; }
         .refresh-btn {
-            padding: 8px 18px; border-radius: 8px;
-            background: rgba(255,255,255,0.1); color: white;
-            border: 1px solid rgba(255,255,255,0.2);
-            font-family: 'Be Vietnam Pro', sans-serif;
-            font-size: 13px; font-weight: 600;
+            padding: 8px 18px; border-radius: 8px; background: rgba(255,255,255,0.1);
+            color: white; border: 1px solid rgba(255,255,255,0.2);
+            font-family: 'Be Vietnam Pro', sans-serif; font-size: 13px; font-weight: 600;
             cursor: pointer; transition: all .2s;
         }
         .refresh-btn:hover { background: rgba(255,255,255,0.18); }
+        .print-btn {
+            padding: 8px 18px; border-radius: 8px; background: rgba(139,92,246,0.25);
+            color: #C4B5FD; border: 1px solid rgba(139,92,246,0.4);
+            font-family: 'Be Vietnam Pro', sans-serif; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: all .2s;
+        }
+        .print-btn:hover { background: rgba(139,92,246,0.4); color: white; }
         .tb-time { color: rgba(255,255,255,0.45); font-size: 13px; }
 
-        /* ─── MAIN ─── */
-        .main { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
-
-        /* ─── STAT CARDS ─── */
-        .stat-cards {
-            display: grid; grid-template-columns: repeat(4, 1fr);
-            gap: 16px; margin-bottom: 28px;
+        /* FILTER BAR */
+        .filter-bar {
+            background: white; border-bottom: 1px solid var(--border);
+            padding: 14px 40px; display: flex; align-items: center; gap: 16px;
+            flex-wrap: wrap;
         }
+        .filter-label { font-size: 13px; font-weight: 600; color: var(--muted); }
+        .period-btns { display: flex; gap: 6px; }
+        .pbtn {
+            padding: 6px 16px; border-radius: 8px; border: 1.5px solid var(--border);
+            background: white; color: var(--muted);
+            font-family: 'Be Vietnam Pro', sans-serif; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: all .18s;
+        }
+        .pbtn:hover { border-color: var(--blue); color: var(--blue); }
+        .pbtn.active { background: var(--blue); border-color: var(--blue); color: white; box-shadow: 0 3px 10px rgba(37,99,235,.3); }
+
+        /* MAIN */
+        .main { max-width: 1200px; margin: 0 auto; padding: 28px 24px; }
+
+        /* STAT CARDS */
+        .stat-cards { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 28px; }
         .stat-card {
-            background: white; border-radius: 16px;
-            padding: 22px 20px;
-            border: 1px solid var(--border);
-            display: flex; align-items: flex-start; gap: 14px;
-            transition: all .25s;
-            animation: fadeUp .5s ease both;
+            background: white; border-radius: 16px; padding: 22px 20px;
+            border: 1px solid var(--border); display: flex; align-items: flex-start; gap: 14px;
+            transition: all .25s; animation: fadeUp .5s ease both;
         }
-        .stat-card:nth-child(2) { animation-delay: .1s; }
-        .stat-card:nth-child(3) { animation-delay: .2s; }
-        .stat-card:nth-child(4) { animation-delay: .3s; }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .stat-card:nth-child(2) { animation-delay:.1s; } .stat-card:nth-child(3) { animation-delay:.2s; } .stat-card:nth-child(4) { animation-delay:.3s; }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
         .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(10,22,40,0.1); border-color: transparent; }
-        .stat-card-icon {
-            width: 48px; height: 48px; border-radius: 14px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px; flex-shrink: 0;
-        }
-        .sci-blue   { background: rgba(37,99,235,0.1); }
-        .sci-green  { background: rgba(16,185,129,0.1); }
-        .sci-orange { background: rgba(249,115,22,0.1); }
-        .sci-purple { background: rgba(139,92,246,0.1); }
+        .stat-card-icon { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+        .sci-blue{background:rgba(37,99,235,0.1);} .sci-green{background:rgba(16,185,129,0.1);} .sci-orange{background:rgba(249,115,22,0.1);} .sci-purple{background:rgba(139,92,246,0.1);}
         .stat-card-body { display: flex; flex-direction: column; }
-        .sc-label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
-        .sc-value {
-            font-family: 'Outfit', sans-serif;
-            font-size: 26px; font-weight: 800; color: var(--navy);
-            line-height: 1.1;
-        }
-        .sc-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
-        .sc-trend { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; }
-        .up   { color: var(--green); }
-        .down { color: var(--red); }
+        .sc-label { font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+        .sc-value { font-family:'Outfit',sans-serif; font-size:26px; font-weight:800; color:var(--navy); line-height:1.1; }
+        .sc-sub { font-size:12px; color:var(--muted); margin-top:3px; }
 
-        /* ─── CHARTS ─── */
-        .charts-row {
-            display: grid; grid-template-columns: 2fr 1fr;
-            gap: 16px; margin-bottom: 24px;
-        }
+        /* CHARTS */
+        .charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px; }
+        .charts-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
         .chart-card {
-            background: white; border-radius: 16px;
-            border: 1px solid var(--border);
-            padding: 24px;
-            animation: fadeUp .5s ease .2s both;
+            background: white; border-radius: 16px; border: 1px solid var(--border);
+            padding: 24px; animation: fadeUp .5s ease .2s both;
         }
-        .chart-header {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        .chart-title {
-            font-family: 'Outfit', sans-serif;
-            font-size: 16px; font-weight: 700; color: var(--navy);
-        }
-        .chart-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-        .chart-badge {
-            padding: 4px 12px; border-radius: 50px;
-            font-size: 11px; font-weight: 700;
-        }
-        .cb-blue { background: rgba(37,99,235,0.1); color: var(--blue); }
+        .chart-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+        .chart-title { font-family:'Outfit',sans-serif; font-size:16px; font-weight:700; color:var(--navy); }
+        .chart-sub { font-size:12px; color:var(--muted); margin-top:2px; }
+        .chart-badge { padding:4px 12px; border-radius:50px; font-size:11px; font-weight:700; }
+        .cb-blue{background:rgba(37,99,235,0.1);color:var(--blue);}
+        .cb-green{background:rgba(16,185,129,0.1);color:var(--green);}
 
-        /* ─── TABLE ─── */
+        /* TABLE */
         .table-card {
-            background: white; border-radius: 16px;
-            border: 1px solid var(--border);
-            overflow: hidden;
-            animation: fadeUp .5s ease .3s both;
+            background: white; border-radius: 16px; border: 1px solid var(--border);
+            overflow: hidden; animation: fadeUp .5s ease .3s both;
         }
         .table-header {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border);
-            background: var(--light);
+            padding: 16px 24px; border-bottom: 1px solid var(--border); background: var(--light);
+            flex-wrap: wrap; gap: 10px;
         }
-        .table-title { font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; color: var(--navy); }
-        .tbl { width: 100%; border-collapse: collapse; }
-        .tbl th {
-            text-align: left; padding: 12px 20px;
-            font-size: 11px; font-weight: 700; color: var(--muted);
-            text-transform: uppercase; letter-spacing: .5px;
-            background: var(--light); border-bottom: 1px solid var(--border);
+        .table-title { font-family:'Outfit',sans-serif; font-size:16px; font-weight:700; color:var(--navy); }
+        .table-search {
+            padding: 7px 14px; border: 1.5px solid var(--border); border-radius: 8px;
+            font-family: 'Be Vietnam Pro', sans-serif; font-size: 13px; outline: none; transition: all .2s;
         }
-        .tbl td { padding: 14px 20px; border-bottom: 1px solid var(--light); vertical-align: middle; font-size: 14px; }
-        .tbl tr:last-child td { border-bottom: none; }
-        .tbl tr:hover td { background: #F8FAFC; }
-        .tbl-name { font-weight: 600; color: var(--navy); }
-        .tbl-user { font-size: 12px; color: var(--muted); }
-        .amount-chip {
-            display: inline-block;
-            background: rgba(16,185,129,0.1); color: var(--green);
-            border-radius: 8px; padding: 4px 10px;
-            font-size: 13px; font-weight: 700;
+        .table-search:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.08); }
+        .tbl { width:100%; border-collapse:collapse; }
+        .tbl th { text-align:left; padding:12px 20px; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; background:var(--light); border-bottom:1px solid var(--border); }
+        .tbl td { padding:14px 20px; border-bottom:1px solid var(--light); vertical-align:middle; font-size:14px; }
+        .tbl tr:last-child td { border-bottom:none; }
+        .tbl tr:hover td { background:#F8FAFC; }
+        .tbl-name { font-weight:600; color:var(--navy); }
+        .amount-chip { display:inline-block; background:rgba(16,185,129,0.1); color:var(--green); border-radius:8px; padding:4px 10px; font-size:13px; font-weight:700; }
+        .amount-chip-pending { display:inline-block; background:rgba(249,115,22,0.08); color:var(--orange); border-radius:8px; padding:4px 10px; font-size:12px; font-weight:600; }
+        .empty-state { text-align:center; padding:60px 20px; color:var(--muted); }
+        .empty-state .e-icon { font-size:40px; margin-bottom:12px; }
+
+        @media print {
+            .topbar, .filter-bar, .table-header .table-search, .print-btn, .refresh-btn { display: none !important; }
+            body { background: white; }
+            .main { padding: 0; max-width: 100%; }
+            .stat-card, .chart-card, .table-card { box-shadow: none !important; border: 1px solid #ddd !important; }
+            .chart-card { break-inside: avoid; }
         }
-        .amount-chip-pending {
-            display: inline-block;
-            background: rgba(249,115,22,0.08); color: var(--orange);
-            border-radius: 8px; padding: 4px 10px;
-            font-size: 12px; font-weight: 600;
-        }
-        .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
-        .empty-state .e-icon { font-size: 40px; margin-bottom: 12px; }
 
         @media (max-width: 900px) {
             .stat-cards { grid-template-columns: repeat(2,1fr); }
-            .charts-row { grid-template-columns: 1fr; }
+            .charts-row, .charts-row-2 { grid-template-columns: 1fr; }
             .topbar { padding: 0 20px; }
             .tb-title { display: none; }
+            .filter-bar { padding: 12px 20px; }
         }
     </style>
 </head>
@@ -193,8 +155,21 @@
     </div>
     <div class="tb-right">
         <div class="tb-time" id="clockDisplay"></div>
+        <button class="print-btn" onclick="window.print()">🖨️ In báo cáo</button>
         <button class="refresh-btn" onclick="loadData()">🔄 Làm mới</button>
     </div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+    <span class="filter-label">📅 Lọc theo:</span>
+    <div class="period-btns">
+        <button class="pbtn active" data-p="all" onclick="setPeriod('all')">Tất cả</button>
+        <button class="pbtn" data-p="today" onclick="setPeriod('today')">Hôm nay</button>
+        <button class="pbtn" data-p="week" onclick="setPeriod('week')">7 ngày</button>
+        <button class="pbtn" data-p="month" onclick="setPeriod('month')">30 ngày</button>
+    </div>
+    <span id="periodInfo" style="font-size:12px;color:var(--muted);margin-left:8px"></span>
 </div>
 
 <div class="main">
@@ -234,7 +209,7 @@
         </div>
     </div>
 
-    <!-- CHARTS -->
+    <!-- CHARTS ROW 1 -->
     <div class="charts-row">
         <div class="chart-card">
             <div class="chart-header">
@@ -257,11 +232,37 @@
         </div>
     </div>
 
+    <!-- CHARTS ROW 2 – Line chart by hour -->
+    <div class="charts-row-2">
+        <div class="chart-card">
+            <div class="chart-header">
+                <div>
+                    <div class="chart-title">Doanh thu theo giờ trong ngày</div>
+                    <div class="chart-sub">Phân bổ doanh thu theo khung giờ</div>
+                </div>
+                <span class="chart-badge cb-green">Giờ</span>
+            </div>
+            <canvas id="chartHourly" height="180"></canvas>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header">
+                <div>
+                    <div class="chart-title">Xu hướng theo ngày</div>
+                    <div class="chart-sub">Số lượt đỗ theo ngày gần đây</div>
+                </div>
+            </div>
+            <canvas id="chartTrend" height="180"></canvas>
+        </div>
+    </div>
+
     <!-- TABLE -->
     <div class="table-card">
         <div class="table-header">
             <div class="table-title">📋 Chi tiết giao dịch</div>
-            <span style="font-size:13px;color:var(--muted)" id="tableCount">0 giao dịch</span>
+            <div style="display:flex;align-items:center;gap:12px">
+                <input type="text" class="table-search" id="tableSearch" placeholder="🔍 Tìm giao dịch..." oninput="filterTable()">
+                <span style="font-size:13px;color:var(--muted)" id="tableCount">0 giao dịch</span>
+            </div>
         </div>
         <table class="tbl">
             <thead>
@@ -269,11 +270,12 @@
                     <th>#</th>
                     <th>Bãi xe</th>
                     <th>Khách hàng</th>
+                    <th>Thời gian</th>
                     <th>Số tiền</th>
                 </tr>
             </thead>
             <tbody id="detailTableBody">
-                <tr><td colspan="4" class="empty-state"><div class="e-icon">⏳</div>Đang tải dữ liệu...</td></tr>
+                <tr><td colspan="5" class="empty-state"><div class="e-icon">⏳</div>Đang tải dữ liệu...</td></tr>
             </tbody>
         </table>
     </div>
@@ -282,129 +284,172 @@
 <script>
 if (sessionStorage.getItem('adminLoggedIn') !== 'true') window.location.href = 'login.html?role=admin';
 
-let barChart = null;
-let doughnutChart = null;
+let barChart = null, doughnutChart = null, hourlyChart = null, trendChart = null;
+let allData = [];
+let currentPeriod = 'all';
 
 // Clock
-function updateClock() {
-    document.getElementById('clockDisplay').textContent = new Date().toLocaleTimeString('vi-VN');
-}
+function updateClock() { document.getElementById('clockDisplay').textContent = new Date().toLocaleTimeString('vi-VN'); }
 updateClock(); setInterval(updateClock, 1000);
+
+// Period filter
+function setPeriod(p) {
+    currentPeriod = p;
+    document.querySelectorAll('.pbtn').forEach(b => b.classList.toggle('active', b.dataset.p === p));
+    const now = new Date();
+    const labels = { all:'Tất cả dữ liệu', today:'Hôm nay: '+now.toLocaleDateString('vi-VN'), week:'7 ngày qua', month:'30 ngày qua' };
+    document.getElementById('periodInfo').textContent = labels[p] || '';
+    renderData(getFilteredData());
+}
+
+function getFilteredData() {
+    if (currentPeriod === 'all') return allData;
+    const now = Date.now();
+    const ms = { today: 86400000, week: 604800000, month: 2592000000 }[currentPeriod];
+    return allData.filter(d => d.createdAt && (now - new Date(d.createdAt).getTime()) < ms);
+}
+
+// Filter table
+function filterTable() {
+    const q = document.getElementById('tableSearch').value.toLowerCase();
+    const filtered = getFilteredData().filter(d =>
+        (d.parkingLotName || '').toLowerCase().includes(q) ||
+        (d.userName || '').toLowerCase().includes(q)
+    );
+    renderTable(filtered);
+}
 
 async function loadData() {
     try {
         const res = await fetch('http://localhost:8080/api/booking/revenue-stats');
         if (!res.ok) throw new Error('Server error');
-        const data = await res.json();
-
-        if (!data.length) {
-            document.getElementById('detailTableBody').innerHTML = `
-                <tr><td colspan="4" style="text-align:center;padding:60px;color:#94a3b8">
-                    <div style="font-size:36px;margin-bottom:12px">📭</div>
-                    Chưa có dữ liệu doanh thu
-                </td></tr>`;
-            return;
-        }
-
-        // ─── STATS ───
-        const totalMoney = data.reduce((s, d) => s + (d.totalPrice || 0), 0);
-        const avgMoney   = data.length ? Math.round(totalMoney / data.length) : 0;
-
-        // Find top lot (null-safe)
-        const byLot = {};
-        data.forEach(d => {
-            const lot = d.parkingLotName || ('Bãi #' + d.parkingLotId);
-            byLot[lot] = (byLot[lot] || 0) + (d.totalPrice || 0);
-        });
-        const topEntry = Object.entries(byLot).sort((a,b) => b[1]-a[1])[0];
-
-        document.getElementById('totalRevenue').textContent = totalMoney.toLocaleString('vi-VN') + ' VNĐ';
-        document.getElementById('totalCount').textContent = data.length.toLocaleString('vi-VN');
-        document.getElementById('avgRevenue').textContent = avgMoney.toLocaleString('vi-VN') + ' VNĐ';
-        document.getElementById('topLot').textContent = topEntry ? topEntry[0] : '—';
-        document.getElementById('topLotRevenue').textContent = topEntry ? topEntry[1].toLocaleString('vi-VN') + ' VNĐ' : '';
-        document.getElementById('tableCount').textContent = data.length + ' giao dịch';
-
-        // ─── BAR CHART ───
-        const labels   = data.map(d => (d.parkingLotName || 'Bãi xe') + ' (' + (d.userName || '—') + ')');
-        const revenues = data.map(d => d.totalPrice || 0);
-
-        if (barChart) barChart.destroy();
-        barChart = new Chart(document.getElementById('chartBar'), {
-            type: 'bar',
-            data: {
-                labels: labels.map(l => l.length > 25 ? l.substring(0,25) + '...' : l),
-                datasets: [{
-                    label: 'Doanh thu (VNĐ)',
-                    data: revenues,
-                    backgroundColor: revenues.map((_, i) =>
-                        `hsla(${210 + i * 15}, 80%, ${50 + (i % 3) * 8}%, 0.85)`),
-                    borderRadius: 8, borderSkipped: false
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { callback: v => v.toLocaleString('vi-VN') },
-                        grid: { color: '#F1F5F9' }
-                    },
-                    x: { grid: { display: false }, ticks: { font: { size: 11 } } }
-                }
-            }
-        });
-
-        // ─── DOUGHNUT CHART ───
-        const topN = Object.entries(byLot).sort((a,b) => b[1]-a[1]).slice(0, 6);
-        if (doughnutChart) doughnutChart.destroy();
-        doughnutChart = new Chart(document.getElementById('chartDoughnut'), {
-            type: 'doughnut',
-            data: {
-                labels: topN.map(([k]) => k.length > 20 ? k.substring(0,20) + '...' : k),
-                datasets: [{
-                    data: topN.map(([,v]) => v),
-                    backgroundColor: ['#2563EB','#10B981','#F97316','#8B5CF6','#EF4444','#06B6D4'],
-                    borderWidth: 2, borderColor: '#fff'
-                }]
-            },
-            options: {
-                responsive: true,
-                cutout: '65%',
-                plugins: {
-                    legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 12 } }
-                }
-            }
-        });
-
-        // ─── TABLE (fully null-safe) ───
-        document.getElementById('detailTableBody').innerHTML = data.map((d, i) => {
-            const price   = (d.totalPrice != null) ? (d.totalPrice || 0) : null;
-            const priceStr = (price != null)
-                ? price.toLocaleString('vi-VN') + ' VNĐ'
-                : 'Chưa TT';
-            const chipCls  = (price != null && price > 0) ? 'amount-chip' : 'amount-chip-pending';
-            const lotName  = d.parkingLotName || ('Bãi xe #' + (d.parkingLotId || '?'));
-            const timeStr  = d.createdAt ? new Date(d.createdAt).toLocaleString('vi-VN') : '—';
-            return `<tr>
-                <td style="color:var(--muted);font-size:13px">${i + 1}</td>
-                <td>
-                    <div class="tbl-name">${lotName}</div>
-                    <div style="font-size:11px;color:#94a3b8;margin-top:2px">🕐 ${timeStr}</div>
-                </td>
-                <td><div class="tbl-user">👤 ${d.userName || '—'}</div></td>
-                <td><span class="${chipCls}">${priceStr}</span></td>
-            </tr>`;
-        }).join('');
-
+        allData = await res.json();
+        renderData(allData);
     } catch (err) {
-        console.error('Dashboard error:', err);
-        document.getElementById('detailTableBody').innerHTML = `
-            <tr><td colspan="4" style="text-align:center;padding:40px;color:#EF4444">
-                ❌ Lỗi: ${err.message}
-            </td></tr>`;
+        document.getElementById('detailTableBody').innerHTML =
+            `<tr><td colspan="5" style="text-align:center;padding:40px;color:#EF4444">❌ Lỗi: ${err.message}</td></tr>`;
     }
+}
+
+function renderData(data) {
+    if (!data.length) {
+        document.getElementById('detailTableBody').innerHTML =
+            `<tr><td colspan="5" style="text-align:center;padding:60px;color:#94a3b8"><div style="font-size:36px;margin-bottom:12px">📭</div>Chưa có dữ liệu</td></tr>`;
+        ['totalRevenue','totalCount','avgRevenue','topLot','topLotRevenue'].forEach(id => document.getElementById(id).textContent = '—');
+        return;
+    }
+
+    // Stats
+    const totalMoney = data.reduce((s, d) => s + (d.totalPrice || 0), 0);
+    const avgMoney = Math.round(totalMoney / data.length);
+    const byLot = {};
+    data.forEach(d => {
+        const lot = d.parkingLotName || ('Bãi #' + d.parkingLotId);
+        byLot[lot] = (byLot[lot] || 0) + (d.totalPrice || 0);
+    });
+    const topEntry = Object.entries(byLot).sort((a, b) => b[1] - a[1])[0];
+
+    document.getElementById('totalRevenue').textContent = totalMoney.toLocaleString('vi-VN') + ' VNĐ';
+    document.getElementById('totalCount').textContent = data.length.toLocaleString('vi-VN');
+    document.getElementById('avgRevenue').textContent = avgMoney.toLocaleString('vi-VN') + ' VNĐ';
+    document.getElementById('topLot').textContent = topEntry ? topEntry[0] : '—';
+    document.getElementById('topLotRevenue').textContent = topEntry ? topEntry[1].toLocaleString('vi-VN') + ' VNĐ' : '';
+    document.getElementById('tableCount').textContent = data.length + ' giao dịch';
+
+    // Bar chart
+    const labels = data.map(d => (d.parkingLotName || 'Bãi xe') + ' (' + (d.userName || '—') + ')');
+    const revenues = data.map(d => d.totalPrice || 0);
+    if (barChart) barChart.destroy();
+    barChart = new Chart(document.getElementById('chartBar'), {
+        type: 'bar',
+        data: {
+            labels: labels.map(l => l.length > 25 ? l.substring(0,25)+'...' : l),
+            datasets: [{ label:'Doanh thu (VNĐ)', data: revenues,
+                backgroundColor: revenues.map((_,i) => `hsla(${210+i*15},80%,${50+(i%3)*8}%,0.85)`),
+                borderRadius: 8, borderSkipped: false }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString('vi-VN') }, grid: { color:'#F1F5F9' } },
+                x: { grid: { display: false }, ticks: { font: { size:11 } } } } }
+    });
+
+    // Doughnut chart
+    const topN = Object.entries(byLot).sort((a,b) => b[1]-a[1]).slice(0,6);
+    if (doughnutChart) doughnutChart.destroy();
+    doughnutChart = new Chart(document.getElementById('chartDoughnut'), {
+        type: 'doughnut',
+        data: { labels: topN.map(([k]) => k.length>20?k.substring(0,20)+'...':k),
+            datasets: [{ data: topN.map(([,v]) => v),
+                backgroundColor:['#2563EB','#10B981','#F97316','#8B5CF6','#EF4444','#06B6D4'],
+                borderWidth:2, borderColor:'#fff' }] },
+        options: { responsive:true, cutout:'65%', plugins: { legend: { position:'bottom', labels:{ font:{size:11}, padding:12 } } } }
+    });
+
+    // Hourly chart
+    const hourlyData = Array(24).fill(0);
+    data.forEach(d => {
+        if (d.createdAt) {
+            const h = new Date(d.createdAt).getHours();
+            hourlyData[h] += (d.totalPrice || 0);
+        }
+    });
+    if (hourlyChart) hourlyChart.destroy();
+    hourlyChart = new Chart(document.getElementById('chartHourly'), {
+        type: 'line',
+        data: {
+            labels: Array.from({length:24}, (_,i) => `${i}:00`),
+            datasets: [{ label:'Doanh thu', data: hourlyData,
+                borderColor:'#10B981', backgroundColor:'rgba(16,185,129,0.08)',
+                borderWidth:2.5, pointRadius:3, pointBackgroundColor:'#10B981',
+                fill:true, tension:0.4 }]
+        },
+        options: { responsive:true, plugins:{ legend:{display:false} },
+            scales: { y:{ beginAtZero:true, ticks:{callback:v=>v>0?v.toLocaleString('vi-VN'):0}, grid:{color:'#F1F5F9'} },
+                x:{ grid:{display:false}, ticks:{font:{size:10}} } } }
+    });
+
+    // Trend chart (by day)
+    const dayMap = {};
+    data.forEach(d => {
+        if (d.createdAt) {
+            const day = new Date(d.createdAt).toLocaleDateString('vi-VN');
+            dayMap[day] = (dayMap[day] || 0) + 1;
+        }
+    });
+    const trendDays = Object.keys(dayMap).slice(-14);
+    const trendVals = trendDays.map(d => dayMap[d]);
+    if (trendChart) trendChart.destroy();
+    trendChart = new Chart(document.getElementById('chartTrend'), {
+        type: 'bar',
+        data: {
+            labels: trendDays,
+            datasets: [{ label:'Lượt đỗ', data: trendVals,
+                backgroundColor:'rgba(37,99,235,0.7)', borderRadius:6 }]
+        },
+        options: { responsive:true, plugins:{ legend:{display:false} },
+            scales: { y:{ beginAtZero:true, ticks:{stepSize:1}, grid:{color:'#F1F5F9'} },
+                x:{ grid:{display:false}, ticks:{font:{size:10}, maxRotation:45} } } }
+    });
+
+    // Table
+    renderTable(data);
+}
+
+function renderTable(data) {
+    document.getElementById('detailTableBody').innerHTML = data.map((d, i) => {
+        const price = (d.totalPrice != null) ? (d.totalPrice || 0) : null;
+        const priceStr = (price != null) ? price.toLocaleString('vi-VN') + ' VNĐ' : 'Chưa TT';
+        const chipCls = (price != null && price > 0) ? 'amount-chip' : 'amount-chip-pending';
+        const lotName = d.parkingLotName || ('Bãi xe #' + (d.parkingLotId || '?'));
+        const timeStr = d.createdAt ? new Date(d.createdAt).toLocaleString('vi-VN') : '—';
+        return `<tr>
+            <td style="color:var(--muted);font-size:13px">${i+1}</td>
+            <td><div class="tbl-name">${lotName}</div></td>
+            <td><div style="font-size:13px;color:#64748B">👤 ${d.userName || '—'}</div></td>
+            <td><div style="font-size:11px;color:#94a3b8">🕐 ${timeStr}</div></td>
+            <td><span class="${chipCls}">${priceStr}</span></td>
+        </tr>`;
+    }).join('');
 }
 
 loadData();

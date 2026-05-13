@@ -36,10 +36,12 @@
     </div>
     <div class="toolbar-right">
         <button id="btnLocate" onclick="locateMe()">📍 Vị trí của tôi</button>
+        <button id="btnNearest" onclick="findNearest()" title="Tìm bãi gần nhất">🎯 Gần nhất</button>
         <label class="filter-toggle">
             <input type="checkbox" id="filterAvailable" onchange="loadUserMarkers()">
             <span>Còn chỗ</span>
         </label>
+        <button id="btnFavorites" onclick="toggleFavorites()" title="Bãi xe yêu thích">⭐ Yêu thích</button>
         <button id="btnHistory" onclick="toggleHistory()">📋 Lịch sử</button>
         <div class="user-chip" id="userChip">
             <span id="userNameDisplay">Loading...</span>
@@ -48,8 +50,61 @@
     </div>
 </div>
 
+<!-- FILTER BAR -->
+<div id="filterBar">
+    <div class="filter-bar-inner">
+        <div class="filter-group">
+            <span class="filter-label">📏 Bán kính:</span>
+            <div class="radius-btns">
+                <button class="rbtn" data-r="0" onclick="setRadius(0)">Tất cả</button>
+                <button class="rbtn" data-r="500" onclick="setRadius(500)">500m</button>
+                <button class="rbtn" data-r="1000" onclick="setRadius(1000)">1km</button>
+                <button class="rbtn" data-r="2000" onclick="setRadius(2000)">2km</button>
+                <button class="rbtn" data-r="5000" onclick="setRadius(5000)">5km</button>
+            </div>
+        </div>
+        <div class="filter-group">
+            <span class="filter-label">🎨 Bản đồ:</span>
+            <label class="filter-toggle">
+                <input type="checkbox" id="toggleHeatmap" onchange="toggleHeatmapLayer()">
+                <span>Heatmap</span>
+            </label>
+        </div>
+        <div class="filter-group" id="compareGroup" style="margin-left:auto">
+            <span class="filter-label" id="compareCount">So sánh: 0/3</span>
+            <button class="compare-btn" id="btnCompare" onclick="openCompare()" disabled>⚖️ So sánh</button>
+            <button class="compare-clear-btn" id="btnClearCompare" onclick="clearCompare()" style="display:none">✕ Xóa</button>
+        </div>
+    </div>
+</div>
+
 <!-- MAP -->
 <div id="map"></div>
+
+<!-- VIEWPORT STATS -->
+<div id="viewportStats" class="viewport-stats">
+    <div class="vs-item vs-available">
+        <span class="vs-dot dot-green"></span>
+        <span id="vsAvail">0</span> còn chỗ
+    </div>
+    <div class="vs-sep"></div>
+    <div class="vs-item vs-full">
+        <span class="vs-dot dot-red"></span>
+        <span id="vsFull">0</span> hết chỗ
+    </div>
+</div>
+
+<!-- FAVORITES SIDEBAR -->
+<div id="favoritesSidebar" class="history-sidebar favorites-sidebar">
+    <div class="history-header">
+        <h3>⭐ Bãi xe yêu thích</h3>
+        <button onclick="toggleFavorites()" class="close-btn">✕</button>
+    </div>
+    <div id="favoritesList" class="history-list">
+        <div class="history-empty">Đang tải...</div>
+    </div>
+</div>
+<div class="history-overlay" id="favoritesOverlay" onclick="toggleFavorites()"></div>
 
 <!-- HISTORY SIDEBAR -->
 <div id="historySidebar" class="history-sidebar">
@@ -62,6 +117,16 @@
     </div>
 </div>
 <div class="history-overlay" id="historyOverlay" onclick="toggleHistory()"></div>
+
+<!-- COMPARE DRAWER -->
+<div id="compareDrawer" class="compare-drawer">
+    <div class="compare-drawer-header">
+        <h3>⚖️ So sánh bãi xe</h3>
+        <button onclick="closeCompare()" class="close-btn">✕</button>
+    </div>
+    <div id="compareContent" class="compare-content"></div>
+</div>
+<div class="compare-overlay" id="compareOverlay" onclick="closeCompare()"></div>
 
 <!-- BOOKING MODAL -->
 <div id="bookingModal" class="modal-overlay">
@@ -79,6 +144,15 @@
             <div class="modal-info-row">
                 <span>💰 Giá:</span>
                 <strong style="color: var(--orange)">20.000 VNĐ / giờ</strong>
+            </div>
+            <!-- Favorite toggle in modal -->
+            <div class="modal-fav-row">
+                <button class="modal-fav-btn" id="modalFavBtn" onclick="toggleFavoriteFromModal()">
+                    <span id="modalFavIcon">☆</span> Thêm vào yêu thích
+                </button>
+                <button class="modal-share-btn" onclick="shareParking()">
+                    🔗 Chia sẻ
+                </button>
             </div>
             <div class="modal-field">
                 <label>Họ tên của bạn</label>

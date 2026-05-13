@@ -742,3 +742,256 @@ body {
     .payment-modal-box { width: 98%; max-height: 98vh; border-radius: 18px; }
     .pay-amount-value { font-size: 28px; }
 }
+
+/* ─── NEW TOOLBAR BUTTONS ─── */
+#btnNearest {
+    background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+    color: white; border: none; padding: 9px 16px;
+    border-radius: 9px; cursor: pointer;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 13px; font-weight: 600;
+    transition: all .2s; white-space: nowrap;
+}
+#btnNearest:hover { background: linear-gradient(135deg, #7C3AED, #6D28D9); transform: translateY(-1px); }
+
+#btnFavorites {
+    background: linear-gradient(135deg, #F59E0B, #F97316);
+    color: white; border: none; padding: 9px 14px;
+    border-radius: 9px; cursor: pointer;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 13px; font-weight: 600;
+    transition: all .2s; white-space: nowrap;
+}
+#btnFavorites:hover { background: linear-gradient(135deg, #D97706, #EA6B00); transform: translateY(-1px); }
+#btnFavorites.has-favs { animation: favPulse 2s ease infinite; }
+@keyframes favPulse { 0%,100%{ box-shadow: 0 0 0 0 rgba(249,115,22,0.4); } 50%{ box-shadow: 0 0 0 6px rgba(249,115,22,0); } }
+
+/* ─── FILTER BAR ─── */
+#filterBar {
+    position: absolute;
+    top: 78px; left: 12px; right: 12px;
+    z-index: 9;
+    animation: slideDown .4s ease .1s both;
+}
+.filter-bar-inner {
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: blur(14px);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.8);
+    box-shadow: 0 4px 16px rgba(10,22,40,0.1);
+    padding: 10px 18px;
+    display: flex; align-items: center; gap: 20px;
+    flex-wrap: wrap;
+}
+.filter-group {
+    display: flex; align-items: center; gap: 10px;
+}
+.filter-label {
+    font-size: 12px; font-weight: 700; color: var(--muted);
+    white-space: nowrap;
+}
+.radius-btns { display: flex; gap: 5px; }
+.rbtn {
+    padding: 5px 12px; border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: white; color: var(--muted);
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all .18s;
+}
+.rbtn:hover { border-color: var(--blue2); color: var(--blue); }
+.rbtn.active {
+    background: var(--blue); border-color: var(--blue);
+    color: white; box-shadow: 0 3px 10px rgba(37,99,235,0.3);
+}
+.compare-btn {
+    padding: 6px 14px; border-radius: 8px;
+    background: var(--navy); color: white; border: none;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: all .2s;
+}
+.compare-btn:hover:not(:disabled) { background: #1e3a5f; transform: translateY(-1px); }
+.compare-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+.compare-clear-btn {
+    padding: 6px 10px; border-radius: 8px;
+    background: rgba(239,68,68,0.1); color: var(--red); border: none;
+    font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s;
+}
+.compare-clear-btn:hover { background: rgba(239,68,68,0.2); }
+
+/* ─── VIEWPORT STATS ─── */
+.viewport-stats {
+    position: absolute;
+    bottom: 36px; right: 12px;
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: blur(12px);
+    border-radius: 12px; padding: 10px 16px;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 4px 16px rgba(10,22,40,0.12);
+    border: 1px solid var(--border);
+    z-index: 9; font-size: 12px; font-weight: 600;
+    animation: fadeIn .4s ease both;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.vs-item { display: flex; align-items: center; gap: 6px; color: var(--text); }
+.vs-sep { width: 1px; height: 20px; background: var(--border); }
+.vs-dot { width: 9px; height: 9px; border-radius: 50%; }
+.dot-green { background: var(--green); box-shadow: 0 0 6px rgba(16,185,129,.5); }
+.dot-red   { background: var(--red); }
+
+/* ─── FAVORITES SIDEBAR ─── */
+.favorites-sidebar { background: #fffbf0; }
+.fav-item {
+    border: 1px solid rgba(249,115,22,0.2); border-radius: 12px;
+    padding: 14px 16px; margin-bottom: 10px;
+    background: white; transition: all .2s;
+    animation: itemIn .3s ease both;
+    display: flex; align-items: center; gap: 12px;
+}
+.fav-item:hover { border-color: var(--orange); box-shadow: 0 4px 16px rgba(249,115,22,0.12); }
+.fav-icon { font-size: 24px; flex-shrink: 0; }
+.fav-info { flex: 1; min-width: 0; }
+.fav-name { font-weight: 700; font-size: 14px; color: var(--navy); margin-bottom: 3px; }
+.fav-status { font-size: 12px; font-weight: 600; }
+.fav-status.available { color: var(--green); }
+.fav-status.full { color: var(--red); }
+.fav-actions { display: flex; flex-direction: column; gap: 4px; }
+.fav-btn-go {
+    padding: 5px 10px; border-radius: 7px;
+    background: var(--orange); color: white; border: none;
+    font-size: 11px; font-weight: 700; cursor: pointer;
+    transition: all .2s;
+}
+.fav-btn-go:hover { background: #ea6b00; }
+.fav-btn-remove {
+    padding: 5px 10px; border-radius: 7px;
+    background: rgba(239,68,68,0.1); color: var(--red); border: none;
+    font-size: 11px; font-weight: 600; cursor: pointer;
+    transition: all .2s;
+}
+.fav-btn-remove:hover { background: rgba(239,68,68,0.2); }
+
+/* ─── MODAL FAVORITE & SHARE ROW ─── */
+.modal-fav-row {
+    display: flex; gap: 8px; margin: 12px 0;
+}
+.modal-fav-btn, .modal-share-btn {
+    flex: 1; padding: 9px 12px; border-radius: 9px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: all .2s; border: 1.5px solid var(--border);
+    background: var(--light); color: var(--muted);
+}
+.modal-fav-btn:hover { border-color: var(--orange); color: var(--orange); background: rgba(249,115,22,0.05); }
+.modal-fav-btn.is-fav {
+    background: rgba(249,115,22,0.1); border-color: var(--orange);
+    color: var(--orange);
+}
+.modal-share-btn:hover { border-color: var(--blue); color: var(--blue); background: rgba(37,99,235,0.05); }
+
+/* ─── COMPARE DRAWER ─── */
+.compare-drawer {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 0; background: white;
+    z-index: 300; overflow: hidden;
+    transition: height .4s cubic-bezier(.4,0,.2,1);
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -8px 40px rgba(10,22,40,0.2);
+}
+.compare-drawer.open { height: 75vh; }
+.compare-overlay {
+    position: fixed; inset: 0;
+    background: rgba(10,22,40,0.4);
+    z-index: 299; opacity: 0; pointer-events: none;
+    transition: opacity .3s; backdrop-filter: blur(2px);
+}
+.compare-overlay.show { opacity: 1; pointer-events: auto; }
+.compare-drawer-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--light);
+}
+.compare-drawer-header h3 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px; font-weight: 700; color: var(--navy);
+}
+.compare-content {
+    padding: 20px 24px;
+    overflow-y: auto; height: calc(75vh - 80px);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px; align-content: start;
+}
+.compare-card {
+    border: 2px solid var(--border); border-radius: 16px;
+    padding: 20px; background: white;
+    transition: all .2s;
+}
+.compare-card:hover { border-color: var(--blue2); box-shadow: 0 6px 20px rgba(37,99,235,0.1); }
+.cc-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px; font-weight: 700; color: var(--navy);
+    margin-bottom: 12px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+}
+.cc-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 0; font-size: 13px;
+    border-bottom: 1px solid #f8fafc;
+}
+.cc-row:last-child { border-bottom: none; }
+.cc-key { color: var(--muted); font-weight: 500; }
+.cc-val { font-weight: 700; color: var(--navy); }
+.cc-val.green { color: var(--green); }
+.cc-val.red { color: var(--red); }
+.cc-val.orange { color: var(--orange); }
+.compare-card .compare-pick-indicator {
+    display: inline-block;
+    width: 10px; height: 10px; border-radius: 50%;
+    margin-right: 6px;
+}
+
+/* ─── POPUP: COMPARE & FAVORITE BUTTONS ─── */
+.pk-btn-fav {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: rgba(249,115,22,0.1); border: 1.5px solid rgba(249,115,22,0.3);
+    font-size: 14px; cursor: pointer;
+    transition: all .2s; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+}
+.pk-btn-fav:hover { background: rgba(249,115,22,0.2); transform: scale(1.1); }
+.pk-btn-fav.is-fav { background: var(--orange); border-color: var(--orange); }
+.pk-btn-compare {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: rgba(37,99,235,0.1); border: 1.5px solid rgba(37,99,235,0.2);
+    font-size: 12px; font-weight: 700; color: var(--blue);
+    cursor: pointer; transition: all .2s; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+}
+.pk-btn-compare:hover { background: rgba(37,99,235,0.2); transform: scale(1.1); }
+.pk-btn-compare.in-compare { background: var(--blue); color: white; border-color: var(--blue); }
+
+/* ─── NEAREST HIGHLIGHT ─── */
+@keyframes nearestPulse {
+    0%  { box-shadow: 0 0 0 0 rgba(139,92,246,0.6); }
+    70% { box-shadow: 0 0 0 16px rgba(139,92,246,0); }
+    100%{ box-shadow: 0 0 0 0 rgba(139,92,246,0); }
+}
+
+/* ─── MAP adjustments for filter bar ─── */
+#map { top: 0; }
+.mapboxgl-ctrl-top-right { top: 138px !important; }
+.mapboxgl-ctrl-bottom-right { bottom: 44px !important; }
+.map-legend { bottom: 56px; }
+
+@media (max-width: 768px) {
+    #filterBar { top: 120px; }
+    .filter-bar-inner { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .compare-content { grid-template-columns: 1fr; }
+    .compare-drawer.open { height: 90vh; }
+    .compare-content { height: calc(90vh - 80px); }
+    .viewport-stats { bottom: 80px; }
+}
+

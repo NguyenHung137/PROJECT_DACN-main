@@ -1,0 +1,201 @@
+<mxfile host="65bd71144e">
+    <diagram id="eMOHcVDfxzQgjoghuB3H" name="Page-1">
+        <mxGraphModel dx="784" dy="751" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="User" style="swimlane;startSize=30;fontStyle=1;fontSize=13;fillColor=#1ba1e2;strokeColor=#006EAF;fontColor=#ffffff;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="40" width="220" height="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="- userId: String&#10;- name: String&#10;- email: String&#10;- phone: String&#10;- password: String&#10;- role: String&#10;- createdAt: DateTime" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];" parent="2" vertex="1">
+                    <mxGeometry y="30" width="220" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="+ register(): void&#10;+ login(): String&#10;+ updateProfile(): void&#10;+ changePassword(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];" parent="2" vertex="1">
+                    <mxGeometry y="140" width="220" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" value="ParkingLot" style="swimlane;startSize=30;fontStyle=1;fontSize=13;fillColor=#008a00;strokeColor=#005700;fontColor=#ffffff;" parent="1" vertex="1">
+                    <mxGeometry x="320" y="40" width="230" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="11" value="- lotId: String&#10;- name: String&#10;- address: String&#10;- totalSlots: int&#10;- availableSlots: int&#10;- pricePerHour: double&#10;- latitude: double&#10;- longitude: double&#10;- status: String" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];" parent="10" vertex="1">
+                    <mxGeometry y="30" width="230" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="12" value="+ getAvailableSlots(): int&#10;+ updateSlots(): void&#10;+ calculatePrice(): double" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];" parent="10" vertex="1">
+                    <mxGeometry y="160" width="230" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="20" value="Booking" style="swimlane;startSize=30;fontStyle=1;fontSize=13;fillColor=#e3c800;strokeColor=#B09500;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="620" y="40" width="230" height="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="21" value="- bookingId: String&#10;- userId: String&#10;- lotId: String&#10;- startTime: DateTime&#10;- endTime: DateTime&#10;- totalPrice: double&#10;- status: String&#10;- paymentMethod: String&#10;- paymentStatus: String" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];" parent="20" vertex="1">
+                    <mxGeometry y="30" width="230" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="22" value="+ createBooking(): void&#10;+ cancelBooking(): void&#10;+ confirmPayment(): void&#10;+ calculateTotal(): double" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];" parent="20" vertex="1">
+                    <mxGeometry y="160" width="230" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="30" value="BookingHistory" style="swimlane;startSize=30;fontStyle=1;fontSize=13;fillColor=#e51400;strokeColor=#B20000;fontColor=#ffffff;" parent="1" vertex="1">
+                    <mxGeometry x="920" y="40" width="220" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="31" value="- historyId: String&#10;- bookingId: String&#10;- userId: String&#10;- lotId: String&#10;- action: String&#10;- timestamp: DateTime&#10;- details: String" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];" parent="30" vertex="1">
+                    <mxGeometry y="30" width="220" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="32" value="+ logAction(): void&#10;+ getHistory(): List&#10;+ filterByDate(): List" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];" parent="30" vertex="1">
+                    <mxGeometry y="140" width="220" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="40" value="ParkingHistory" style="swimlane;startSize=30;fontStyle=1;fontSize=13;fillColor=#76608a;strokeColor=#432D57;fontColor=#ffffff;" parent="1" vertex="1">
+                    <mxGeometry x="1200" y="40" width="220" height="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="41" value="- recordId: String&#10;- lotId: String&#10;- userId: String&#10;- checkIn: DateTime&#10;- checkOut: DateTime&#10;- duration: int&#10;- amountPaid: double&#10;- plateNumber: String" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];" parent="40" vertex="1">
+                    <mxGeometry y="30" width="220" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="42" value="+ recordCheckIn(): void&#10;+ recordCheckOut(): void&#10;+ getDuration(): int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];" parent="40" vertex="1">
+                    <mxGeometry y="150" width="220" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="50" value="UserController" style="swimlane;startSize=30;fontStyle=1;fontSize=13;fillColor=#1ba1e2;strokeColor=#006EAF;fontColor=#ffffff;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="360" width="220" height="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="51" value="- userService: UserService&#10;- authService: AuthService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];" parent="50" vertex="1">
+                    <mxGeometry y="30" width="220" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="52" value="+ handleRegister(): Response&#10;+ handleLogin(): Response&#10;+ handleUpdateProfile(): Response&#10;+ handleGetProfile(): Response&#10;+ handleChangePassword(): Response" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];" parent="50" vertex="1">
+                    <mxGeometry y="80" width="220" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="60" value="BookingController" style="swimlane;startSize=30;fontStyle=1;fontSize=13;fillColor=#e3c800;strokeColor=#B09500;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="320" y="360" width="230" height="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="61" value="- bookingService: BookingService&#10;- paymentService: PaymentService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];" parent="60" vertex="1">
+                    <mxGeometry y="30" width="230" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="62" value="+ handleCreateBooking(): Response&#10;+ handleCancelBooking(): Response&#10;+ handleGetBookings(): Response&#10;+ handlePayment(): Response&#10;+ handleVNPAYReturn(): Response" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];" parent="60" vertex="1">
+                    <mxGeometry y="80" width="230" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="70" value="ParkingController" style="swimlane;startSize=30;fontStyle=1;fontSize=13;fillColor=#008a00;strokeColor=#005700;fontColor=#ffffff;" parent="1" vertex="1">
+                    <mxGeometry x="620" y="360" width="230" height="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="71" value="- parkingService: ParkingService&#10;- predictionService: PredictionService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];" parent="70" vertex="1">
+                    <mxGeometry y="30" width="230" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="72" value="+ handleGetLots(): Response&#10;+ handleSearchLots(): Response&#10;+ handleGetLotDetail(): Response&#10;+ handleGetAvailability(): Response&#10;+ handleGetPrediction(): Response" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];" parent="70" vertex="1">
+                    <mxGeometry y="80" width="230" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="80" value="AdminController" style="swimlane;startSize=30;fontStyle=1;fontSize=13;fillColor=#e51400;strokeColor=#B20000;fontColor=#ffffff;" parent="1" vertex="1">
+                    <mxGeometry x="920" y="360" width="220" height="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="81" value="- adminService: AdminService&#10;- reportService: ReportService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];" parent="80" vertex="1">
+                    <mxGeometry y="30" width="220" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="82" value="+ handleManageUsers(): Response&#10;+ handleManageLots(): Response&#10;+ handleViewReports(): Response&#10;+ handleDashboard(): Response&#10;+ handleManageBookings(): Response" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];" parent="80" vertex="1">
+                    <mxGeometry y="80" width="220" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="90" value="PredictionService" style="swimlane;startSize=30;fontStyle=1;fontSize=13;fillColor=#76608a;strokeColor=#432D57;fontColor=#ffffff;" parent="1" vertex="1">
+                    <mxGeometry x="1200" y="360" width="220" height="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="91" value="- modelPath: String&#10;- historicalData: List&#10;- predictionModel: MLModel&#10;- accuracy: double" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];" parent="90" vertex="1">
+                    <mxGeometry y="30" width="220" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="92" value="+ predictOccupancy(): double&#10;+ trainModel(): void&#10;+ loadHistoricalData(): void&#10;+ getRecommendation(): String&#10;+ evaluateModel(): double" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];" parent="90" vertex="1">
+                    <mxGeometry y="110" width="220" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="r1" value="1     makes     *" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#6c8ebf;fontStyle=1;" parent="1" source="2" target="20" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r2" value="1          *" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#b85450;dashed=1;" parent="1" source="2" target="30" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="150" y="10"/>
+                            <mxPoint x="1030" y="10"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r3" value="1     books     *" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#82b366;fontStyle=1;" parent="1" source="10" target="20" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r4" value="1          *" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#9673a6;dashed=1;" parent="1" source="10" target="40" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="435" y="20"/>
+                            <mxPoint x="1310" y="20"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r5" value="1     logs     *" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#b85450;" parent="1" source="20" target="30" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r6" value="1          1" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#9673a6;dashed=1;" parent="1" source="20" target="40" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="735" y="30"/>
+                            <mxPoint x="1310" y="30"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r7" value="uses" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#6c8ebf;dashed=1;" parent="1" source="50" target="2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r8" value="uses" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#d6b656;dashed=1;" parent="1" source="60" target="20" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r9" value="logs" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#b85450;dashed=1;" parent="1" source="60" target="30" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="435" y="600"/>
+                            <mxPoint x="1030" y="600"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r10" value="uses" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#82b366;dashed=1;" parent="1" source="70" target="10" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r11" value="calls" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#9673a6;dashed=1;" parent="1" source="70" target="90" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="735" y="600"/>
+                            <mxPoint x="1310" y="600"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r12" value="manages" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#b85450;dashed=1;" parent="1" source="80" target="2" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1030" y="650"/>
+                            <mxPoint x="150" y="650"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r13" value="manages" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#82b366;dashed=1;" parent="1" source="80" target="10" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1030" y="670"/>
+                            <mxPoint x="435" y="670"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r14" value="reads" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#9673a6;dashed=1;" parent="1" source="90" target="40" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="L1" value="Legend" style="swimlane;startSize=25;fontStyle=1;fontSize=12;fillColor=#a0522d;strokeColor=#6D1F00;fontColor=#ffffff;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="620" width="230" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="L2" value="" style="endArrow=open;endFill=0;strokeColor=#333333;" parent="L1" edge="1">
+                    <mxGeometry x="20" y="50" width="60" height="20" as="geometry">
+                        <mxPoint x="20" y="60" as="sourcePoint"/>
+                        <mxPoint x="80" y="60" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="L3" value="Association (1..*)" style="text;align=left;" parent="L1" vertex="1">
+                    <mxGeometry x="90" y="45" width="130" height="25" as="geometry"/>
+                </mxCell>
+                <mxCell id="L4" value="" style="endArrow=open;endFill=0;strokeColor=#333333;dashed=1;" parent="L1" edge="1">
+                    <mxGeometry x="20" y="85" width="60" height="20" as="geometry">
+                        <mxPoint x="20" y="95" as="sourcePoint"/>
+                        <mxPoint x="80" y="95" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="L5" value="Dependency (uses)" style="text;align=left;" parent="L1" vertex="1">
+                    <mxGeometry x="90" y="80" width="130" height="25" as="geometry"/>
+                </mxCell>
+                <mxCell id="L6" value="Color = Layer (Model / Controller / Service)" style="text;align=left;fontStyle=2;" parent="L1" vertex="1">
+                    <mxGeometry x="10" y="108" width="210" height="20" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
