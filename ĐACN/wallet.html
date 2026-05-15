@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkFinder – Ví của tôi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy:#0A1628; --blue:#2563EB; --blue2:#3B82F6;
+            --orange:#F97316; --green:#10B981; --red:#EF4444;
+            --light:#F8FAFC; --text:#1E293B; --muted:#64748B; --border:#E2E8F0;
+        }
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'Be Vietnam Pro',sans-serif;background:var(--light);color:var(--text);min-height:100vh;}
+        
+        /* TOPBAR */
+        .topbar{background:var(--navy);color:white;padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:64px;box-shadow:0 2px 20px rgba(10,22,40,0.3);position:sticky;top:0;z-index:100;}
+        .tb-left{display:flex;align-items:center;gap:20px;}
+        .back-btn{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:14px;font-weight:500;padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);transition:all .2s;}
+        .back-btn:hover{background:rgba(255,255,255,0.1);color:white;}
+        .tb-brand{font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;letter-spacing:-0.5px;}
+        .tb-brand span{color:var(--orange);}
+
+        .main-container { max-width: 1000px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        
+        /* CARDS */
+        .card { background: white; border-radius: 20px; padding: 30px; border: 1px solid var(--border); box-shadow: 0 4px 16px rgba(10,22,40,0.04); margin-bottom: 24px; }
+        .card-header { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; color: var(--navy); margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+        
+        /* WALLET BALANCE */
+        .wallet-card { background: linear-gradient(135deg, var(--navy), #1e3a8a); color: white; border-radius: 20px; padding: 30px; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(10,22,40,0.2); margin-bottom: 24px; }
+        .wallet-card::after { content: '💳'; position: absolute; right: -20px; bottom: -30px; font-size: 150px; opacity: 0.1; transform: rotate(-15deg); }
+        .w-label { font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 8px; font-weight: 500; }
+        .w-balance { font-family: 'Outfit', sans-serif; font-size: 48px; font-weight: 800; letter-spacing: -1px; margin-bottom: 24px; }
+        .w-actions { display: flex; gap: 12px; position: relative; z-index: 2; }
+        .btn-topup { background: var(--orange); color: white; padding: 12px 24px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; transition: all .2s; font-family: inherit; font-size: 15px; flex: 1; }
+        .btn-topup:hover { background: #ea580c; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(249,115,22,0.3); }
+
+        /* TRANSACTIONS */
+        .txn-list { display: flex; flex-direction: column; gap: 16px; }
+        .txn-item { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+        .txn-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .txn-info { display: flex; align-items: center; gap: 16px; }
+        .txn-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .txn-icon.topup { background: rgba(16,185,129,0.1); color: var(--green); }
+        .txn-icon.pay { background: rgba(239,68,68,0.1); color: var(--red); }
+        .txn-title { font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; color: var(--navy); }
+        .txn-date { font-size: 13px; color: var(--muted); margin-top: 4px; }
+        .txn-amount { font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; }
+        .txn-amount.pos { color: var(--green); }
+        .txn-amount.neg { color: var(--text); }
+
+        /* TOPUP FORM */
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+        .amount-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+        .amount-btn { padding: 12px; text-align: center; border: 1.5px solid var(--border); border-radius: 12px; background: white; cursor: pointer; font-weight: 600; font-family: 'Outfit', sans-serif; color: var(--navy); transition: all .2s; }
+        .amount-btn:hover { border-color: var(--blue); background: rgba(37,99,235,0.05); }
+        .amount-btn.active { border-color: var(--blue); background: var(--blue); color: white; }
+        
+        .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(50px); padding: 12px 24px; background: var(--green); color: white; border-radius: 50px; font-weight: 600; font-size: 14px; opacity: 0; transition: all .3s; z-index: 2000; box-shadow: 0 10px 30px rgba(16,185,129,0.4); }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+        @media (max-width: 768px) {
+            .main-container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="tb-left">
+        <a href="user.html" class="back-btn">← Bản đồ</a>
+        <div class="tb-brand">Park<span>Finder</span></div>
+    </div>
+</div>
+
+<div class="main-container">
+    <!-- LEFT SIDE: Wallet & Topup -->
+    <div class="left-side">
+        <div class="wallet-card">
+            <div class="w-label">Số dư hiện tại</div>
+            <div class="w-balance" id="wBalance">0 VNĐ</div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">Nạp tiền vào ví</div>
+            <div class="form-group">
+                <label>Chọn mệnh giá</label>
+                <div class="amount-grid">
+                    <div class="amount-btn active" onclick="selectAmount(this, 50000)">50.000đ</div>
+                    <div class="amount-btn" onclick="selectAmount(this, 100000)">100.000đ</div>
+                    <div class="amount-btn" onclick="selectAmount(this, 200000)">200.000đ</div>
+                    <div class="amount-btn" onclick="selectAmount(this, 500000)">500.000đ</div>
+                    <div class="amount-btn" onclick="selectAmount(this, 1000000)">1.000.000đ</div>
+                    <div class="amount-btn" onclick="selectAmount(this, 2000000)">2.000.000đ</div>
+                </div>
+            </div>
+            <button class="btn-topup" style="width:100%" onclick="processTopup()">💳 Nạp tiền qua VNPay</button>
+        </div>
+    </div>
+
+    <!-- RIGHT SIDE: Transactions -->
+    <div class="right-side">
+        <div class="card" style="height:100%">
+            <div class="card-header">Lịch sử giao dịch</div>
+            <div class="txn-list" id="txnList">
+                <div style="text-align:center;padding:30px;color:var(--muted)">Đang tải...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">Thành công!</div>
+
+<script>
+    if (sessionStorage.getItem('userLoggedIn') !== 'true') window.location.href = 'login.html';
+
+    let selectedAmount = 50000;
+
+    function showToast(msg, isErr=false) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.style.background = isErr ? 'var(--red)' : 'var(--green)';
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function getWalletData() {
+        try { return JSON.parse(localStorage.getItem('pkf_wallet')) || { balance: 0, txns: [] }; } 
+        catch { return { balance: 0, txns: [] }; }
+    }
+    
+    function saveWalletData(data) {
+        localStorage.setItem('pkf_wallet', JSON.stringify(data));
+        renderWallet();
+    }
+
+    function renderWallet() {
+        const data = getWalletData();
+        document.getElementById('wBalance').textContent = data.balance.toLocaleString('vi-VN') + ' VNĐ';
+        
+        const list = document.getElementById('txnList');
+        if (data.txns.length === 0) {
+            list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);background:#f8fafc;border-radius:12px;border:1px dashed var(--border)">Chưa có giao dịch nào.</div>';
+            return;
+        }
+        
+        // Sắp xếp mới nhất lên đầu
+        const sorted = [...data.txns].reverse();
+        list.innerHTML = sorted.map(t => `
+            <div class="txn-item">
+                <div class="txn-info">
+                    <div class="txn-icon ${t.type === 'topup' ? 'topup' : 'pay'}">
+                        ${t.type === 'topup' ? '💳' : '🅿️'}
+                    </div>
+                    <div>
+                        <div class="txn-title">${t.title}</div>
+                        <div class="txn-date">${new Date(t.date).toLocaleString('vi-VN')}</div>
+                    </div>
+                </div>
+                <div class="txn-amount ${t.type === 'topup' ? 'pos' : 'neg'}">
+                    ${t.type === 'topup' ? '+' : '-'}${t.amount.toLocaleString('vi-VN')}đ
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function selectAmount(el, amt) {
+        document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        selectedAmount = amt;
+    }
+
+    function processTopup() {
+        const btn = document.querySelector('.btn-topup');
+        btn.textContent = '⏳ Đang chuyển hướng VNPay...';
+        btn.disabled = true;
+        
+        // Mô phỏng thanh toán thành công sau 1.5s
+        setTimeout(() => {
+            const data = getWalletData();
+            data.balance += selectedAmount;
+            data.txns.push({
+                type: 'topup',
+                title: 'Nạp tiền vào ví',
+                amount: selectedAmount,
+                date: new Date().toISOString()
+            });
+            saveWalletData(data);
+            
+            showToast(`Đã nạp thành công ${selectedAmount.toLocaleString('vi-VN')}đ`);
+            btn.textContent = '💳 Nạp tiền qua VNPay';
+            btn.disabled = false;
+        }, 1500);
+    }
+
+    // Init
+    renderWallet();
+</script>
+</body>
+</html>

@@ -216,6 +216,7 @@ function locateMe() {
     navigator.geolocation.getCurrentPosition(
         pos => {
             const { longitude: lng, latitude: lat } = pos.coords;
+            userLatLng = { lat, lng };
             map.flyTo({ center: [lng, lat], zoom: 16, essential: true });
             if (userMarker) userMarker.remove();
             userMarker = new mapboxgl.Marker({ color: '#2563EB' })
@@ -226,6 +227,11 @@ function locateMe() {
             btn.textContent = '📍 Vị trí của tôi';
             btn.disabled = false;
             showToast('Đã tìm thấy vị trí của bạn!', 'green');
+
+            // If compare drawer is open, re-render it to update distances
+            if (document.getElementById('compareDrawer').classList.contains('open')) {
+                renderCompare();
+            }
         },
         err => {
             const msgs = {
@@ -334,8 +340,25 @@ function openBookingModal(parkId, parkName) {
     document.getElementById('modalParkName').textContent = parkName;
     document.getElementById('modalParkId').textContent = '#' + parkId;
     document.getElementById('modalUserName').value = CURRENT_USER !== 'Khách' ? CURRENT_USER : '';
-    document.getElementById('modalPhone').value = '';
+    const phoneInput = document.getElementById('modalPhone');
+    if (phoneInput) phoneInput.value = '';
+    
+    // Populate vehicles
+    const vSelect = document.getElementById('modalVehicle');
+    vSelect.innerHTML = '<option value="">-- Chọn phương tiện --</option>';
+    try {
+        const vehicles = JSON.parse(localStorage.getItem('pkf_vehicles') || '[]');
+        vehicles.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.plate;
+            opt.textContent = `${v.type==='car'?'🚗':'🏍️'} ${v.plate} - ${v.color}`;
+            vSelect.appendChild(opt);
+        });
+        if (vehicles.length > 0) vSelect.selectedIndex = 1;
+    } catch(e) {}
+    
     document.getElementById('modalErr').classList.remove('show');
+    document.getElementById('modalVehicleErr').style.display = 'none';
     document.getElementById('bookingModal').classList.add('show');
     setTimeout(() => document.getElementById('modalUserName').focus(), 300);
     allMarkers.forEach(m => { if (m.getPopup && m.getPopup().isOpen()) m.getPopup().remove(); });
@@ -354,12 +377,25 @@ document.getElementById('bookingModal').addEventListener('click', e => {
 // Validate & move to payment step
 function goToPayment() {
     const name = document.getElementById('modalUserName').value.trim();
+    const vehicle = document.getElementById('modalVehicle').value;
+    let ok = true;
+    
     if (!name) {
         document.getElementById('modalErr').classList.add('show');
-        document.getElementById('modalUserName').focus();
-        return;
+        ok = false;
+    } else {
+        document.getElementById('modalErr').classList.remove('show');
     }
-    document.getElementById('modalErr').classList.remove('show');
+    
+    if (!vehicle) {
+        document.getElementById('modalVehicleErr').style.display = 'block';
+        ok = false;
+    } else {
+        document.getElementById('modalVehicleErr').style.display = 'none';
+    }
+    
+    if (!ok) return;
+
     openPaymentModal();
 }
 
@@ -376,6 +412,13 @@ function openPaymentModal() {
     document.getElementById('payAmountDesc').textContent =
         `${PRICE_PER_HOUR.toLocaleString('vi-VN')} VNĐ × ${bookingDuration} giờ`;
     document.getElementById('payFooterAmount').textContent = totalStr;
+
+    // Load wallet balance
+    try {
+        const wallet = JSON.parse(localStorage.getItem('pkf_wallet')) || { balance: 0 };
+        document.getElementById('modalWalletBalance').textContent = `Số dư: ${wallet.balance.toLocaleString('vi-VN')}đ`;
+        document.getElementById('topbarWalletBalance').textContent = `${wallet.balance.toLocaleString('vi-VN')}đ`;
+    } catch(e) {}
 
     // Reset selection
     selectedPayMethod = 'vnpay-qr';
@@ -417,6 +460,9 @@ function updatePayButton() {
     if (selectedPayMethod === 'cash') {
         btn.classList.add('cash-mode');
         btnText.textContent = '✅ Đặt chỗ – Trả tiền mặt';
+    } else if (selectedPayMethod === 'wallet') {
+        btn.classList.remove('cash-mode');
+        btnText.textContent = '💳 Thanh toán bằng Ví';
     } else {
         btn.classList.remove('cash-mode');
         btnText.textContent = '💳 Thanh toán qua VNPay';
@@ -426,7 +472,8 @@ function updatePayButton() {
 // ─── 9. PROCESS PAYMENT ──────────────────────────────────────
 async function processPayment() {
     const name = document.getElementById('modalUserName').value.trim();
-    const phone = document.getElementById('modalPhone').value.trim();
+    const phoneEl = document.getElementById('modalPhone');
+    const phone = phoneEl ? phoneEl.value.trim() : '';
     const total = bookingDuration * PRICE_PER_HOUR;
 
     const btn = document.getElementById('paySubmitBtn');
@@ -439,6 +486,7 @@ async function processPayment() {
             const res = await fetch(url, { method: 'POST' });
             const msg = await res.text();
             closePaymentModal();
+            closeModal();
             showToast('🎉 Đặt chỗ thành công! Vui lòng thanh toán tại quầy.', 'green');
             loadUserMarkers();
             loadHistory();
@@ -449,10 +497,45 @@ async function processPayment() {
         }
         return;
     }
+    
+    if (selectedPayMethod === 'wallet') {
+        let wallet = { balance: 0, txns: [] };
+        try { wallet = JSON.parse(localStorage.getItem('pkf_wallet')) || { balance: 0, txns: [] }; } catch(e) {}
+        
+        if (wallet.balance < total) {
+            btn.classList.remove('loading');
+            showToast('Số dư ví không đủ, vui lòng nạp thêm!', 'red');
+            return;
+        }
+        
+        wallet.balance -= total;
+        wallet.txns.push({
+            type: 'pay',
+            title: `Thanh toán bãi xe #${bookingParkId}`,
+            amount: total,
+            date: new Date().toISOString()
+        });
+        localStorage.setItem('pkf_wallet', JSON.stringify(wallet));
+        document.getElementById('topbarWalletBalance').textContent = `${wallet.balance.toLocaleString('vi-VN')}đ`;
+        
+        try {
+            const url = `http://localhost:8080/api/booking/create/${bookingParkId}?userName=${encodeURIComponent(name)}${phone ? '&phone=' + encodeURIComponent(phone) : ''}&duration=${bookingDuration}`;
+            await fetch(url, { method: 'POST' });
+        } catch(e) {}
+        
+        btn.classList.remove('loading');
+        closePaymentModal();
+        closeModal();
+        showToast('🎉 Đặt chỗ và thanh toán bằng Ví thành công!', 'green');
+        loadUserMarkers();
+        loadHistory();
+        return;
+    }
 
     // ── VNPay: try backend first, fallback to sandbox demo ──
     btn.classList.remove('loading');
     closePaymentModal();
+    closeModal();
     showProcessing();
 
     // Try backend VNPay endpoint
@@ -501,7 +584,7 @@ function launchVNPaySandbox(name, total) {
         parkId: bookingParkId,
         parkName: document.getElementById('modalParkName').textContent,
         name,
-        phone: document.getElementById('modalPhone').value.trim(),
+        phone: document.getElementById('modalPhone') ? document.getElementById('modalPhone').value.trim() : '',
         duration: bookingDuration,
         total,
         method: selectedPayMethod,
@@ -552,30 +635,117 @@ function toggleHistory() {
     if (!isOpen) loadHistory();
 }
 
-function loadHistory() {
+async function loadHistory() {
     const userName = sessionStorage.getItem('userName');
     if (!userName) return;
 
     const list = document.getElementById('historyList');
     list.innerHTML = '<div class="history-empty">Đang tải...</div>';
 
-    fetch(`http://localhost:8080/api/booking/history?userName=${encodeURIComponent(userName)}`)
-        .then(res => res.json())
-        .then(data => {
-            if (!data.length) {
-                list.innerHTML = '<div class="history-empty">🅿️ Chưa có lịch sử đặt chỗ nào</div>';
-                return;
-            }
-            list.innerHTML = data.map((item, i) => `
-            <div class="history-item" style="animation-delay:${i * 0.05}s">
-                <div class="history-lot">🅿️ ${item.parkingLotName || 'Bãi xe #' + item.parkingLotId}</div>
-                <div class="history-time">🕐 ${item.createdAt ? new Date(item.createdAt).toLocaleString('vi-VN') : '—'}</div>
-                <span class="history-price">💰 ${item.totalPrice ? item.totalPrice.toLocaleString('vi-VN') + ' VNĐ' : '20.000 VNĐ'}</span>
-            </div>`).join('');
-        })
-        .catch(() => {
-            list.innerHTML = '<div class="history-empty">Không thể tải lịch sử</div>';
+    try {
+        const [historyRes, activeRes] = await Promise.all([
+            fetch(`http://localhost:8080/api/booking/history?userName=${encodeURIComponent(userName)}`),
+            fetch(`http://localhost:8080/api/booking/all`)
+        ]);
+        const historyData = await historyRes.json();
+        const activeData = (await activeRes.json()).filter(b => b.userName === userName);
+        
+        const combined = [
+            ...activeData.map(b => ({
+                parkingLotId: b.parkingLotId,
+                parkingLotName: 'Bãi xe #' + b.parkingLotId + ' (Đang đỗ)',
+                createdAt: b.startTime,
+                totalPrice: null
+            })),
+            ...historyData.map(h => {
+                const matchedPark = typeof allParkings !== 'undefined' ? allParkings.find(p => p.name === h.parkingLotName) : null;
+                const realId = matchedPark ? matchedPark.id : (parseInt(h.parkingLotName.replace(/[^0-9]/g, '')) || 1);
+                return {
+                    parkingLotId: realId,
+                    parkingLotName: h.parkingLotName,
+                    createdAt: h.checkIn,
+                    totalPrice: h.totalPrice
+                };
+            })
+        ];
+        
+        combined.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        if (!combined.length) {
+            list.innerHTML = '<div class="history-empty">🅿️ Chưa có lịch sử đặt chỗ nào</div>';
+            return;
+        }
+
+        list.innerHTML = combined.map((item, i) => {
+            const parkName = item.parkingLotName;
+            const priceStr = item.totalPrice ? item.totalPrice.toLocaleString('vi-VN') + ' VNĐ' : 'Chưa tính';
+            const timeStr = item.createdAt ? new Date(item.createdAt).toLocaleString('vi-VN') : '—';
+            return `
+            <div class="history-item" style="animation-delay:${i * 0.05}s; position:relative;">
+                <div class="history-lot">🅿️ ${parkName}</div>
+                <div class="history-time">🕐 ${timeStr}</div>
+                <span class="history-price">💰 ${priceStr}</span>
+                <button onclick="openReviewModal(${item.parkingLotId}, '${parkName.replace(/'/g, "\\'")}')" 
+                    style="position:absolute; right:12px; bottom:12px; background:var(--light); border:1px solid var(--border); border-radius:6px; padding:4px 10px; font-size:12px; font-weight:600; color:var(--orange); cursor:pointer;">
+                    ⭐ Đánh giá
+                </button>
+            </div>`;
+        }).join('');
+    } catch(e) {
+        list.innerHTML = '<div class="history-empty">Không thể tải lịch sử</div>';
+    }
+}
+
+// ─── REVIEWS ────────────────────────────────────────────────
+let reviewParkId = null;
+let reviewStar = 0;
+
+function openReviewModal(parkId, parkName) {
+    reviewParkId = parkId;
+    document.getElementById('revParkName').textContent = parkName;
+    document.getElementById('revComment').value = '';
+    setReviewStar(0);
+    document.getElementById('reviewModal').classList.add('show');
+}
+
+function closeReviewModal() {
+    document.getElementById('reviewModal').classList.remove('show');
+}
+
+function setReviewStar(val) {
+    reviewStar = val;
+    const stars = document.querySelectorAll('#reviewModal .star-rating span');
+    stars.forEach((s, i) => {
+        s.style.color = i < val ? '#F97316' : '#e2e8f0';
+    });
+}
+
+async function submitReview() {
+    if (reviewStar === 0) return showToast('Vui lòng chọn số sao!', 'red');
+    
+    const comment = document.getElementById('revComment').value.trim();
+    const userName = sessionStorage.getItem('userName') || 'Khách';
+
+    try {
+        const res = await fetch('http://localhost:8080/api/reviews', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                parkingLotId: reviewParkId,
+                userName: userName,
+                rating: reviewStar,
+                comment: comment
+            })
         });
+        if (!res.ok) throw new Error('Error submitting review');
+        
+        showToast('Cảm ơn bạn đã đánh giá!', 'green');
+        closeReviewModal();
+        loadUserMarkers(); // Reload to show updated ratings
+        if (document.getElementById('compareDrawer').classList.contains('open')) renderCompare();
+    } catch (err) {
+        showToast('Không thể gửi đánh giá', 'red');
+    }
 }
 
 // ─── 11. TOAST ──────────────────────────────────────────────
@@ -593,6 +763,12 @@ map.on('load', () => {
     setInterval(loadUserMarkers, 30000);
     setInterval(updateViewportStats, 5000);
     map.on('moveend', updateViewportStats);
+    
+    // Load wallet topbar
+    try {
+        const wallet = JSON.parse(localStorage.getItem('pkf_wallet')) || { balance: 0 };
+        document.getElementById('topbarWalletBalance').textContent = `${wallet.balance.toLocaleString('vi-VN')}đ`;
+    } catch(e) {}
 });
 
 // ─── 13. RADIUS FILTER ───────────────────────────────────────
@@ -611,8 +787,8 @@ function getDistanceKm(lat1, lng1, lat2, lng2) {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 // Patch loadUserMarkers to support radius filter
@@ -642,7 +818,7 @@ function findNearest() {
                 });
                 if (nearest) {
                     map.flyTo({ center: [nearest.longitude, nearest.latitude], zoom: 17, speed: 1.6 });
-                    showToast(`🎯 Bãi gần nhất: ${nearest.name} (${(minDist*1000).toFixed(0)}m)`, 'green');
+                    showToast(`🎯 Bãi gần nhất: ${nearest.name} (${(minDist * 1000).toFixed(0)}m)`, 'green');
                     allMarkers.forEach(m => {
                         if (m._parkId === nearest.id) {
                             setTimeout(() => m.getPopup() && m.togglePopup(), 800);
@@ -708,7 +884,7 @@ function renderFavorites() {
     const list = document.getElementById('favoritesList');
     if (!favs.length) { list.innerHTML = '<div class="history-empty">⭐ Chưa có bãi xe yêu thích</div>'; return; }
     list.innerHTML = favs.map((f, i) => `
-    <div class="fav-item" style="animation-delay:${i*0.05}s">
+    <div class="fav-item" style="animation-delay:${i * 0.05}s">
         <div class="fav-icon">🅿️</div>
         <div class="fav-info">
             <div class="fav-name">${f.name}</div>
@@ -717,7 +893,7 @@ function renderFavorites() {
             </div>
         </div>
         <div class="fav-actions">
-            <button class="fav-btn-go" onclick="flyToFav(${f.longitude},${f.latitude},'${f.name.replace(/'/g,"\\'")}')">🗺️ Đến</button>
+            <button class="fav-btn-go" onclick="flyToFav(${f.longitude},${f.latitude},'${f.name.replace(/'/g, "\\'")}')">🗺️ Đến</button>
             <button class="fav-btn-remove" onclick="removeFav(${f.id})">🗑️ Xóa</button>
         </div>
     </div>`).join('');
@@ -784,22 +960,28 @@ function closeCompare() {
 }
 
 function renderCompare() {
-    const colors = ['#2563EB','#10B981','#F97316'];
+    const colors = ['#2563EB', '#10B981', '#F97316'];
     document.getElementById('compareContent').innerHTML = compareList.map((p, i) => {
-        let dist = '—';
+        let dist = '<span onclick="locateMe()" style="color:var(--blue);cursor:pointer;text-decoration:underline;font-size:12px">Bật định vị</span>';
         if (userLatLng) {
             const d = getDistanceKm(userLatLng.lat, userLatLng.lng, p.latitude, p.longitude);
-            dist = d < 1 ? `${(d*1000).toFixed(0)}m` : `${d.toFixed(1)}km`;
+            dist = d < 1 ? `${(d * 1000).toFixed(0)}m` : `${d.toFixed(1)}km`;
         }
         const pred = p._pred || {};
         const probPct = Math.round((pred.full_probability || 0) * 100);
         const isAvail = p.status === 'available';
+        
+        const reviews = JSON.parse(localStorage.getItem('pkf_reviews') || '{}');
+        const rev = reviews[p.id];
+        const ratingStr = rev && rev.count > 0 ? (rev.total/rev.count).toFixed(1) + ' ⭐' : 'Chưa có';
+
         return `<div class="compare-card">
             <div class="cc-name"><span class="compare-pick-indicator" style="background:${colors[i]}"></span>${p.name}</div>
-            <div class="cc-row"><span class="cc-key">Trạng thái</span><span class="cc-val ${isAvail?'green':'red'}">${isAvail?'✅ Còn chỗ':'❌ Hết chỗ'}</span></div>
+            <div class="cc-row"><span class="cc-key">Đánh giá</span><span class="cc-val" style="color:var(--orange);font-weight:700">${ratingStr}</span></div>
+            <div class="cc-row"><span class="cc-key">Trạng thái</span><span class="cc-val ${isAvail ? 'green' : 'red'}">${isAvail ? '✅ Còn chỗ' : '❌ Hết chỗ'}</span></div>
             <div class="cc-row"><span class="cc-key">Khoảng cách</span><span class="cc-val orange">${dist}</span></div>
             <div class="cc-row"><span class="cc-key">Giá/giờ</span><span class="cc-val">20.000 VNĐ</span></div>
-            <div class="cc-row"><span class="cc-key">AI dự báo đầy</span><span class="cc-val ${probPct>70?'red':probPct>40?'orange':'green'}">${probPct}%</span></div>
+            <div class="cc-row"><span class="cc-key">AI dự báo đầy</span><span class="cc-val ${probPct > 70 ? 'red' : probPct > 40 ? 'orange' : 'green'}">${probPct}%</span></div>
             <div class="cc-row"><span class="cc-key">Tọa độ</span><span class="cc-val" style="font-size:11px">${p.latitude.toFixed(4)}, ${p.longitude.toFixed(4)}</span></div>
         </div>`;
     }).join('');
@@ -847,10 +1029,10 @@ function toggleHeatmapLayer() {
             map.addLayer({
                 id: 'heatmap-layer', type: 'heatmap', source: 'heatmap-src',
                 paint: {
-                    'heatmap-weight': ['get','weight'],
+                    'heatmap-weight': ['get', 'weight'],
                     'heatmap-intensity': 1.2,
-                    'heatmap-color': ['interpolate',['linear'],['heatmap-density'],
-                        0,'rgba(16,185,129,0)', 0.3,'rgba(16,185,129,0.5)', 0.7,'rgba(249,115,22,0.8)', 1,'rgba(239,68,68,1)'],
+                    'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'],
+                        0, 'rgba(16,185,129,0)', 0.3, 'rgba(16,185,129,0.5)', 0.7, 'rgba(249,115,22,0.8)', 1, 'rgba(239,68,68,1)'],
                     'heatmap-radius': 40,
                     'heatmap-opacity': 0.75
                 }
@@ -898,10 +1080,24 @@ function loadUserMarkers() {
                 const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${park.latitude},${park.longitude}`;
                 const fav = isFavorite(park.id);
                 const inCmp = compareList.some(p => p.id === park.id);
+                
+                let ratingStr = 'Chưa có ĐG';
+                try {
+                    const revRes = await fetch(`http://localhost:8080/api/reviews/parking/${park.id}`);
+                    if (revRes.ok) {
+                        const revData = await revRes.json();
+                        if (revData.totalReviews > 0) {
+                            ratingStr = revData.averageRating + ' ⭐ (' + revData.totalReviews + ')';
+                        }
+                    }
+                } catch(e) {}
 
                 const popupHTML = `
                 <div class="pk-popup-header">
-                    <h4>${park.name}</h4>
+                    <div>
+                        <h4>${park.name}</h4>
+                        <div style="font-size:12px;color:var(--orange);margin-top:2px">${ratingStr}</div>
+                    </div>
                     <div class="pk-status ${isAvail ? 'pk-available' : 'pk-full'}">${isAvail ? 'Còn chỗ' : 'Hết chỗ'}</div>
                 </div>
                 <div class="pk-popup-body">
@@ -909,12 +1105,12 @@ function loadUserMarkers() {
                     <div class="pk-rec">${pred.recommendation}</div>
                     <div class="pk-actions">
                         <button class="pk-btn-dir" onclick="window.open('${googleMapsUrl}','_blank')">🗺️ Chỉ đường</button>
-                        <button class="pk-btn-fav ${fav?'is-fav':''}" data-id="${park.id}" onclick="toggleFavorite({id:${park.id},name:'${park.name.replace(/'/g,"\\'")}',latitude:${park.latitude},longitude:${park.longitude},status:'${park.status}'})" title="${fav?'Bỏ yêu thích':'Thêm yêu thích'}">${fav?'⭐':'☆'}</button>
-                        <button class="pk-btn-compare ${inCmp?'in-compare':''}" data-id="${park.id}" onclick="addToCompare({id:${park.id},name:'${park.name.replace(/'/g,"\\'")}',latitude:${park.latitude},longitude:${park.longitude},status:'${park.status}',_pred:${JSON.stringify(pred)}})">⚖️</button>
+                        <button class="pk-btn-fav ${fav ? 'is-fav' : ''}" data-id="${park.id}" onclick="toggleFavorite({id:${park.id},name:'${park.name.replace(/'/g, "\\'")}',latitude:${park.latitude},longitude:${park.longitude},status:'${park.status}'})" title="${fav ? 'Bỏ yêu thích' : 'Thêm yêu thích'}">${fav ? '⭐' : '☆'}</button>
+                        <button class="pk-btn-compare ${inCmp ? 'in-compare' : ''}" data-id="${park.id}" onclick="addToCompare({id:${park.id},name:'${park.name.replace(/'/g, "\\'")}',latitude:${park.latitude},longitude:${park.longitude},status:'${park.status}',_pred:${JSON.stringify(pred).replace(/"/g, '&quot;')}})">⚖️</button>
                         ${isAvail
-                            ? `<button class="pk-btn-book" onclick="openBookingModal(${park.id},'${park.name.replace(/'/g,"\\'")}')">💳 Đặt</button>`
-                            : `<div class="pk-btn-disabled">❌ Hết</div>`
-                        }
+                        ? `<button class="pk-btn-book" onclick="openBookingModal(${park.id},'${park.name.replace(/'/g, "\\'")}')">💳 Đặt</button>`
+                        : `<div class="pk-btn-disabled">❌ Hết</div>`
+                    }
                     </div>
                 </div>`;
 
@@ -945,3 +1141,75 @@ function loadUserMarkers() {
     if (favs.length) document.getElementById('btnFavorites').classList.add('has-favs');
     document.querySelectorAll('.rbtn')[0]?.classList.add('active');
 })();
+
+// ─── 21. SIDEBAR TOGGLE (MOBILE) ────────────────────────────
+function toggleSidebar() {
+    const sidebar = document.getElementById('left-sidebar');
+    if (sidebar) {
+        sidebar.classList.toggle('show');
+    }
+}
+
+// ─── 22. NOTIFICATIONS ──────────────────────────────────────
+function toggleNotif() {
+    const nd = document.getElementById('notifDropdown');
+    const isShow = nd.style.display === 'block';
+    nd.style.display = isShow ? 'none' : 'block';
+    if (!isShow) {
+        loadNotifications();
+    }
+}
+
+async function loadNotifications() {
+    const userName = sessionStorage.getItem('userName') || 'Khách';
+    const list = document.getElementById('notifList');
+    list.innerHTML = '<div style="padding:15px;text-align:center;color:#64748B;">Đang tải...</div>';
+    
+    try {
+        const res = await fetch(`http://localhost:8080/api/notifications/user/${userName}`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        
+        if (data.length === 0) {
+            list.innerHTML = '<div style="padding:15px;text-align:center;color:#64748B;">Không có thông báo mới</div>';
+            return;
+        }
+        
+        list.innerHTML = data.map(n => `
+            <div style="padding:12px; border-bottom:1px solid #f1f5f9; background:${n.isRead ? '#fff' : '#f0f9ff'}; cursor:pointer" onclick="markNotifRead(${n.id})">
+                <div style="font-weight:${n.isRead ? 'normal' : 'bold'}; margin-bottom:4px;">${n.message}</div>
+                <div style="font-size:11px; color:#94a3b8;">${new Date(n.createdAt).toLocaleString('vi-VN')}</div>
+            </div>
+        `).join('');
+        
+        const unreadCount = data.filter(n => !n.isRead).length;
+        const badge = document.getElementById('notifBadge');
+        if (unreadCount > 0) {
+            badge.textContent = unreadCount;
+            badge.style.display = 'block';
+        } else {
+            badge.style.display = 'none';
+        }
+    } catch(e) {
+        list.innerHTML = '<div style="padding:15px;text-align:center;color:red;">Lỗi kết nối</div>';
+    }
+}
+
+async function markNotifRead(id) {
+    try {
+        await fetch(`http://localhost:8080/api/notifications/${id}/read`, { method: 'PUT' });
+        loadNotifications();
+    } catch(e) {}
+}
+
+document.addEventListener('click', e => {
+    const nw = document.querySelector('.notif-wrapper');
+    const nd = document.getElementById('notifDropdown');
+    if (nw && nd && !nw.contains(e.target)) {
+        nd.style.display = 'none';
+    }
+});
+
+// Load unread count on startup
+setTimeout(loadNotifications, 1000);
+

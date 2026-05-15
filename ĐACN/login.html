@@ -256,6 +256,7 @@
         .admin-mode .tab-btn.active::after { background: var(--orange); }
         .admin-mode .form-input:focus { border-color: var(--orange); box-shadow: 0 0 0 4px rgba(249,115,22,0.08); }
         .admin-mode .mode-btn.active { color: var(--orange); }
+        .admin-mode .divider, .admin-mode .auth-footer-text { display: none !important; }
 
         .divider {
             display: flex; align-items: center; gap: 14px;
@@ -376,7 +377,7 @@
                     <div class="spinner"></div>
                 </button>
                 <div class="divider">hoặc</div>
-                <div style="text-align:center; font-size:14px; color:var(--muted)">
+                <div class="auth-footer-text" style="text-align:center; font-size:14px; color:var(--muted)">
                     Chưa có tài khoản? <a href="#" onclick="switchTab('register')" style="color:var(--blue);font-weight:600;text-decoration:none">Đăng ký ngay</a>
                 </div>
             </div>

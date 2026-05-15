@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkFinder Admin – Real-time Sensor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy:#0A1628; --blue:#2563EB; --blue2:#3B82F6;
+            --orange:#F97316; --green:#10B981; --red:#EF4444;
+            --light:#F8FAFC; --text:#1E293B; --muted:#64748B; --border:#E2E8F0;
+        }
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'Be Vietnam Pro',sans-serif;background:var(--navy);color:white;min-height:100vh;}
+        
+        /* TOPBAR */
+        .topbar{background:rgba(10,22,40,0.8);backdrop-filter:blur(10px);padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:64px;border-bottom:1px solid rgba(255,255,255,0.1);position:sticky;top:0;z-index:100;}
+        .tb-left{display:flex;align-items:center;gap:20px;}
+        .back-btn{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:14px;font-weight:500;padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);transition:all .2s;}
+        .back-btn:hover{background:rgba(255,255,255,0.1);color:white;}
+        .tb-brand{font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;letter-spacing:-0.5px;}
+        .tb-brand span{color:var(--orange);}
+
+        .main-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        
+        /* HEADER */
+        .page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 30px; }
+        .page-title { font-family: 'Outfit', sans-serif; font-size: 32px; font-weight: 800; line-height: 1.2; }
+        .page-subtitle { color: rgba(255,255,255,0.6); font-size: 15px; margin-top: 8px; }
+        
+        /* STATS */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 20px; }
+        .stat-val { font-family: 'Outfit', sans-serif; font-size: 36px; font-weight: 800; margin-bottom: 4px; }
+        .stat-label { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; }
+
+        /* SENSOR GRID */
+        .sensor-container { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 30px; position: relative; }
+        .road { width: 100%; height: 80px; background: #1E293B; margin: 20px 0; border-top: 2px dashed rgba(255,255,255,0.2); border-bottom: 2px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        .road::after { content: ''; width: 100%; height: 2px; background: rgba(255,255,255,0.3); position: absolute; top: 50%; border-radius: 2px; }
+        
+        .parking-row { display: flex; justify-content: space-between; gap: 10px; }
+        .spot { flex: 1; aspect-ratio: 1/1.5; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: all .3s ease; }
+        .spot.avail { border-color: var(--green); box-shadow: inset 0 0 20px rgba(16,185,129,0.2); }
+        .spot.full { border-color: var(--red); box-shadow: inset 0 0 20px rgba(239,68,68,0.2); }
+        
+        .spot-id { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: rgba(255,255,255,0.5); position: absolute; bottom: 10px; }
+        .spot.avail .spot-id { color: var(--green); }
+        .spot.full .spot-id { color: var(--red); }
+        
+        .car-icon { font-size: 40px; transform: scale(0); opacity: 0; transition: all .4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: absolute; }
+        .spot.full .car-icon { transform: scale(1); opacity: 1; }
+
+        /* LIVE BLINK */
+        .live-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--red); padding: 8px 16px; border-radius: 50px; font-weight: 700; font-size: 14px; }
+        .live-dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; animation: blink 1s infinite; }
+        @keyframes blink { 0%, 100% {opacity:1} 50% {opacity:0.3} }
+
+        @media (max-width: 900px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .spot { aspect-ratio: 1/2; }
+            .car-icon { font-size: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="tb-left">
+        <a href="dashboard.html" class="back-btn">← Quay lại</a>
+        <div class="tb-brand">Park<span>Finder</span></div>
+    </div>
+    <div class="live-badge">
+        <div class="live-dot"></div> LIVE
+    </div>
+</div>
+
+<div class="main-container">
+    <div class="page-header">
+        <div>
+            <div class="page-title">Mô phỏng Cảm biến Bãi xe</div>
+            <div class="page-subtitle">Bãi giữ xe A (Tầng 1) – Cập nhật thời gian thực</div>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-val" id="sTotal">20</div>
+            <div class="stat-label">Tổng số chỗ</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-val" id="sAvail" style="color:var(--green)">20</div>
+            <div class="stat-label">Còn trống</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-val" id="sFull" style="color:var(--red)">0</div>
+            <div class="stat-label">Đang đỗ</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-val" id="sTurnover">0</div>
+            <div class="stat-label">Lượt xe ra vào</div>
+        </div>
+    </div>
+
+    <div class="sensor-container">
+        <!-- ROW 1 -->
+        <div class="parking-row" id="row1"></div>
+        
+        <div class="road">
+            <div style="position:absolute; font-family:'Outfit',sans-serif; color:rgba(255,255,255,0.2); font-size:24px; font-weight:800; letter-spacing:10px">LỐI ĐI CHÍNH</div>
+        </div>
+
+        <!-- ROW 2 -->
+        <div class="parking-row" id="row2"></div>
+    </div>
+</div>
+
+<script>
+    if (sessionStorage.getItem('adminLoggedIn') !== 'true') window.location.href = 'login.html';
+
+    const TOTAL_SPOTS = 20;
+    const spots = [];
+    let turnoverCount = 0;
+
+    const row1 = document.getElementById('row1');
+    const row2 = document.getElementById('row2');
+
+    // Init Grid
+    for (let i = 1; i <= TOTAL_SPOTS; i++) {
+        const div = document.createElement('div');
+        div.className = 'spot avail';
+        div.innerHTML = `
+            <div class="car-icon">🚗</div>
+            <div class="spot-id">A${i.toString().padStart(2, '0')}</div>
+        `;
+        spots.push({ el: div, isFull: false });
+        if (i <= 10) row1.appendChild(div);
+        else row2.appendChild(div);
+    }
+
+    function updateStats() {
+        const fullCount = spots.filter(s => s.isFull).length;
+        document.getElementById('sAvail').textContent = TOTAL_SPOTS - fullCount;
+        document.getElementById('sFull').textContent = fullCount;
+        document.getElementById('sTurnover').textContent = turnoverCount;
+    }
+
+    // Simulate Real-time Events
+    function simulate() {
+        // Randomly pick a spot
+        const idx = Math.floor(Math.random() * TOTAL_SPOTS);
+        const spot = spots[idx];
+
+        // 70% chance to fill if empty, 40% chance to leave if full
+        const willChange = spot.isFull ? Math.random() < 0.4 : Math.random() < 0.7;
+
+        if (willChange) {
+            spot.isFull = !spot.isFull;
+            if (spot.isFull) {
+                spot.el.className = 'spot full';
+                // Random car color
+                const colors = ['hue-rotate(0deg)', 'hue-rotate(90deg)', 'hue-rotate(180deg)', 'hue-rotate(270deg)'];
+                spot.el.querySelector('.car-icon').style.filter = colors[Math.floor(Math.random()*colors.length)];
+            } else {
+                spot.el.className = 'spot avail';
+            }
+            turnoverCount++;
+            updateStats();
+        }
+
+        // Random delay for next event (500ms to 2.5s)
+        const delay = Math.random() * 2000 + 500;
+        setTimeout(simulate, delay);
+    }
+
+    // Initialize with some cars
+    for (let i=0; i<8; i++) {
+        const idx = Math.floor(Math.random() * TOTAL_SPOTS);
+        if (!spots[idx].isFull) {
+            spots[idx].isFull = true;
+            spots[idx].el.className = 'spot full';
+        }
+    }
+    updateStats();
+
+    // Start simulation
+    setTimeout(simulate, 2000);
+
+</script>
+</body>
+</html>

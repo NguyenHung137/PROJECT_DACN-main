@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkFinder – Gói Đăng Ký</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy:#0A1628; --blue:#2563EB; --blue2:#3B82F6;
+            --orange:#F97316; --green:#10B981; --red:#EF4444;
+            --light:#F8FAFC; --text:#1E293B; --muted:#64748B; --border:#E2E8F0;
+        }
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'Be Vietnam Pro',sans-serif;background:var(--light);color:var(--text);min-height:100vh;}
+
+        .topbar{background:var(--navy);color:white;padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:64px;box-shadow:0 2px 20px rgba(10,22,40,0.3);}
+        .tb-left{display:flex;align-items:center;gap:20px;}
+        .back-btn{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:14px;font-weight:500;padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);transition:all .2s;}
+        .back-btn:hover{background:rgba(255,255,255,0.1);color:white;}
+        .tb-brand{font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;}
+        .tb-brand span{color:var(--orange);}
+
+        .main{max-width:900px;margin:40px auto;padding:0 24px;}
+        .page-title{font-family:'Outfit',sans-serif;font-size:28px;font-weight:800;color:var(--navy);margin-bottom:8px;}
+        .page-sub{color:var(--muted);margin-bottom:30px;}
+
+        .plans{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:40px;}
+        .plan-card{background:white;border:2px solid var(--border);border-radius:16px;padding:30px;transition:all 0.3s;position:relative;overflow:hidden;}
+        .plan-card:hover{border-color:var(--blue);box-shadow:0 10px 30px rgba(37,99,235,0.1);transform:translateY(-5px);}
+        .plan-card.popular{border-color:var(--orange);}
+        .popular-badge{position:absolute;top:15px;right:-35px;background:var(--orange);color:white;font-size:11px;font-weight:bold;padding:5px 40px;transform:rotate(45deg);}
+        
+        .plan-name{font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;color:var(--navy);margin-bottom:10px;}
+        .plan-price{font-size:32px;font-weight:800;color:var(--blue);margin-bottom:20px;}
+        .plan-price span{font-size:14px;color:var(--muted);font-weight:normal;}
+        
+        .plan-features{list-style:none;margin-bottom:25px;}
+        .plan-features li{margin-bottom:10px;font-size:14px;display:flex;align-items:center;gap:10px;}
+        .plan-features li::before{content:'✓';color:var(--green);font-weight:bold;}
+
+        .btn-buy{display:block;width:100%;padding:12px;text-align:center;background:var(--blue);color:white;border:none;border-radius:8px;font-size:15px;font-weight:bold;cursor:pointer;transition:background 0.2s;}
+        .btn-buy:hover{background:var(--navy);}
+        .plan-card.popular .btn-buy{background:var(--orange);}
+        .plan-card.popular .btn-buy:hover{background:#ea580c;}
+
+        .my-subs{background:white;border-radius:16px;border:1px solid var(--border);padding:24px;}
+        .my-subs-title{font-family:'Outfit',sans-serif;font-size:20px;font-weight:700;color:var(--navy);margin-bottom:20px;}
+        .sub-item{display:flex;align-items:center;justify-content:space-between;padding:15px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;}
+        .sub-info strong{display:block;color:var(--navy);margin-bottom:4px;}
+        .sub-info span{font-size:13px;color:var(--muted);}
+        .sub-status{padding:5px 12px;border-radius:50px;font-size:12px;font-weight:bold;}
+        .sub-status.active{background:rgba(16,185,129,0.1);color:var(--green);}
+        .sub-status.expired{background:rgba(239,68,68,0.1);color:var(--red);}
+
+        #buyModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:1000;}
+        #buyModal.show{display:flex;}
+        .modal-content{background:white;padding:30px;border-radius:16px;width:100%;max-width:400px;}
+        .modal-title{font-size:20px;font-weight:bold;margin-bottom:15px;}
+        .modal-input{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:20px;}
+        .modal-actions{display:flex;gap:10px;}
+        .modal-btn{flex:1;padding:10px;border:none;border-radius:8px;cursor:pointer;font-weight:bold;}
+        .btn-cancel{background:var(--light);color:var(--text);}
+        .btn-confirm{background:var(--blue);color:white;}
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="tb-left">
+        <a href="user.html" class="back-btn">← Quay lại bản đồ</a>
+        <div class="tb-brand">Park<span>Finder</span></div>
+    </div>
+</div>
+
+<div class="main">
+    <h1 class="page-title">Gói Đăng Ký Đỗ Xe</h1>
+    <div class="page-sub">Tiết kiệm hơn với các gói thuê bao tuần và tháng dành cho khách hàng thường xuyên.</div>
+
+    <div class="plans">
+        <div class="plan-card">
+            <div class="plan-name">Gói Tuần</div>
+            <div class="plan-price">120.000đ <span>/ tuần</span></div>
+            <ul class="plan-features">
+                <li>Đỗ xe không giới hạn số lần</li>
+                <li>Hỗ trợ 1 bãi xe cố định</li>
+                <li>Đảm bảo luôn có chỗ</li>
+                <li>Tiết kiệm 30% so với giá lẻ</li>
+            </ul>
+            <button class="btn-buy" onclick="openBuyModal('WEEKLY', 120000)">Đăng ký Gói Tuần</button>
+        </div>
+        <div class="plan-card popular">
+            <div class="popular-badge">PHỔ BIẾN</div>
+            <div class="plan-name">Gói Tháng</div>
+            <div class="plan-price">400.000đ <span>/ tháng</span></div>
+            <ul class="plan-features">
+                <li>Đỗ xe không giới hạn số lần</li>
+                <li>Hỗ trợ 1 bãi xe cố định</li>
+                <li>Đảm bảo luôn có chỗ</li>
+                <li>Tiết kiệm 50% so với giá lẻ</li>
+                <li>Ưu tiên hỗ trợ kỹ thuật</li>
+            </ul>
+            <button class="btn-buy" onclick="openBuyModal('MONTHLY', 400000)">Đăng ký Gói Tháng</button>
+        </div>
+    </div>
+
+    <div class="my-subs">
+        <div class="my-subs-title">Gói đang sử dụng</div>
+        <div id="subList"><div style="color:var(--muted)">Đang tải...</div></div>
+    </div>
+</div>
+
+<div id="buyModal">
+    <div class="modal-content">
+        <div class="modal-title">Xác nhận mua gói</div>
+        <div style="margin-bottom:15px;color:var(--muted)" id="buyDesc"></div>
+        <label style="display:block;margin-bottom:5px;font-size:14px;font-weight:bold;">Chọn bãi xe cố định:</label>
+        <select id="parkSelect" class="modal-input">
+            <option value="">Đang tải danh sách bãi xe...</option>
+        </select>
+        <div class="modal-actions">
+            <button class="modal-btn btn-cancel" onclick="closeBuyModal()">Hủy</button>
+            <button class="modal-btn btn-confirm" onclick="processBuy()">Xác nhận thanh toán</button>
+        </div>
+    </div>
+</div>
+
+<script>
+if (sessionStorage.getItem('userLoggedIn') !== 'true') window.location.href = 'login.html';
+const userName = sessionStorage.getItem('userName');
+let selectedPlan = '';
+let selectedPrice = 0;
+
+async function loadMySubs() {
+    try {
+        const res = await fetch(`http://localhost:8080/api/subscriptions/user/${userName}`);
+        const data = await res.json();
+        const list = document.getElementById('subList');
+        if (!data.length) {
+            list.innerHTML = '<div style="color:var(--muted)">Bạn chưa đăng ký gói nào.</div>';
+            return;
+        }
+        list.innerHTML = data.map(s => `
+            <div class="sub-item">
+                <div class="sub-info">
+                    <strong>${s.passType === 'MONTHLY' ? 'Gói Tháng' : 'Gói Tuần'} - Bãi #${s.parkingLotId}</strong>
+                    <span>Hiệu lực: ${new Date(s.startDate).toLocaleDateString()} - ${new Date(s.endDate).toLocaleDateString()}</span>
+                </div>
+                <div class="sub-status ${s.status === 'ACTIVE' ? 'active' : 'expired'}">${s.status === 'ACTIVE' ? 'Đang kích hoạt' : 'Hết hạn'}</div>
+            </div>
+        `).join('');
+    } catch(e) {
+        document.getElementById('subList').innerHTML = '<div style="color:red">Lỗi tải dữ liệu</div>';
+    }
+}
+
+async function loadParks() {
+    try {
+        const res = await fetch('http://localhost:8080/api/parking/all');
+        const data = await res.json();
+        const select = document.getElementById('parkSelect');
+        select.innerHTML = '<option value="">-- Chọn bãi xe --</option>' + data.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    } catch(e) {}
+}
+
+function openBuyModal(type, price) {
+    selectedPlan = type;
+    selectedPrice = price;
+    document.getElementById('buyDesc').textContent = `Thanh toán: ${price.toLocaleString('vi-VN')}đ`;
+    document.getElementById('buyModal').classList.add('show');
+}
+
+function closeBuyModal() {
+    document.getElementById('buyModal').classList.remove('show');
+}
+
+async function processBuy() {
+    const parkId = document.getElementById('parkSelect').value;
+    if (!parkId) { alert('Vui lòng chọn bãi xe!'); return; }
+    
+    // Giả lập thanh toán trừ tiền ví (nếu muốn)
+    let wallet = JSON.parse(localStorage.getItem('pkf_wallet')) || { balance: 0 };
+    if (wallet.balance < selectedPrice) {
+        alert('Số dư ví không đủ, vui lòng nạp thêm!');
+        return;
+    }
+    
+    try {
+        const res = await fetch('http://localhost:8080/api/subscriptions/buy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userName: userName,
+                parkingLotId: parkId,
+                passType: selectedPlan,
+                price: selectedPrice
+            })
+        });
+        if (res.ok) {
+            wallet.balance -= selectedPrice;
+            localStorage.setItem('pkf_wallet', JSON.stringify(wallet));
+            alert('Mua gói thành công!');
+            closeBuyModal();
+            loadMySubs();
+        }
+    } catch(e) { alert('Lỗi kết nối'); }
+}
+
+loadMySubs();
+loadParks();
+</script>
+</body>
+</html>

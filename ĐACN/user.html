@@ -12,12 +12,17 @@
 </head>
 <body>
 
-<!-- TOP TOOLBAR -->
-<div id="user-toolbar">
-    <div class="toolbar-left">
+<!-- MOBILE MENU TOGGLE -->
+<button id="mobileMenuBtn" class="mobile-menu-btn" onclick="toggleSidebar()">☰ Menu</button>
+
+<!-- LEFT SIDEBAR -->
+<div id="left-sidebar" class="left-sidebar">
+    <div class="sidebar-header">
         <div class="app-logo">Park<span>Finder</span></div>
+        <button class="sidebar-close" onclick="toggleSidebar()">✕</button>
     </div>
-    <div class="toolbar-center">
+    
+    <div class="sidebar-search">
         <!-- Custom Nominatim Search -->
         <div class="search-wrap" id="searchWrap">
             <span class="search-icon">🔍</span>
@@ -25,7 +30,7 @@
                 type="text"
                 id="searchInput"
                 class="search-input"
-                placeholder="Nhập địa chỉ cụ thể, số nhà..."
+                placeholder="Nhập địa chỉ cụ thể..."
                 autocomplete="off"
                 oninput="onSearchInput()"
                 onkeydown="onSearchKey(event)"
@@ -34,27 +39,34 @@
             <div class="search-dropdown" id="searchDropdown"></div>
         </div>
     </div>
-    <div class="toolbar-right">
-        <button id="btnLocate" onclick="locateMe()">📍 Vị trí của tôi</button>
-        <button id="btnNearest" onclick="findNearest()" title="Tìm bãi gần nhất">🎯 Gần nhất</button>
-        <label class="filter-toggle">
-            <input type="checkbox" id="filterAvailable" onchange="loadUserMarkers()">
-            <span>Còn chỗ</span>
-        </label>
-        <button id="btnFavorites" onclick="toggleFavorites()" title="Bãi xe yêu thích">⭐ Yêu thích</button>
-        <button id="btnHistory" onclick="toggleHistory()">📋 Lịch sử</button>
-        <div class="user-chip" id="userChip">
-            <span id="userNameDisplay">Loading...</span>
-            <button onclick="doLogout()" title="Đăng xuất">↩</button>
-        </div>
-    </div>
-</div>
 
-<!-- FILTER BAR -->
-<div id="filterBar">
-    <div class="filter-bar-inner">
-        <div class="filter-group">
-            <span class="filter-label">📏 Bán kính:</span>
+    <div class="sidebar-scrollable">
+        <div class="sidebar-section">
+            <div class="section-title">Hành động nhanh</div>
+            <div class="action-grid">
+                <button class="action-btn" id="btnLocate" onclick="locateMe()">📍 Vị trí của tôi</button>
+                <button class="action-btn" id="btnNearest" onclick="findNearest()">🎯 Gần nhất</button>
+                <button class="action-btn" id="btnFavorites" onclick="toggleFavorites()">⭐ Yêu thích</button>
+                <button class="action-btn" id="btnHistory" onclick="toggleHistory()">📋 Lịch sử</button>
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="section-title">Bộ lọc bản đồ</div>
+            <div class="filter-row">
+                <label class="filter-toggle">
+                    <input type="checkbox" id="filterAvailable" onchange="loadUserMarkers()">
+                    <span>Chỉ hiện bãi còn chỗ</span>
+                </label>
+            </div>
+            <div class="filter-row">
+                <label class="filter-toggle">
+                    <input type="checkbox" id="toggleHeatmap" onchange="toggleHeatmapLayer()">
+                    <span>Bản đồ Heatmap</span>
+                </label>
+            </div>
+            
+            <div class="filter-label" style="margin-top: 14px; margin-bottom: 8px;">📏 Bán kính tìm kiếm:</div>
             <div class="radius-btns">
                 <button class="rbtn" data-r="0" onclick="setRadius(0)">Tất cả</button>
                 <button class="rbtn" data-r="500" onclick="setRadius(500)">500m</button>
@@ -63,17 +75,53 @@
                 <button class="rbtn" data-r="5000" onclick="setRadius(5000)">5km</button>
             </div>
         </div>
-        <div class="filter-group">
-            <span class="filter-label">🎨 Bản đồ:</span>
-            <label class="filter-toggle">
-                <input type="checkbox" id="toggleHeatmap" onchange="toggleHeatmapLayer()">
-                <span>Heatmap</span>
-            </label>
+
+        <div class="sidebar-section" id="compareGroupWrapper">
+            <div class="section-title">So sánh bãi xe</div>
+            <div class="compare-info-box">
+                <span id="compareCount" class="compare-count-text">Đã chọn: 0/3</span>
+                <div class="compare-actions">
+                    <button class="compare-btn" id="btnCompare" onclick="openCompare()" disabled>⚖️ Xem so sánh</button>
+                    <button class="compare-clear-btn" id="btnClearCompare" onclick="clearCompare()" style="display:none">✕ Xóa</button>
+                </div>
+            </div>
         </div>
-        <div class="filter-group" id="compareGroup" style="margin-left:auto">
-            <span class="filter-label" id="compareCount">So sánh: 0/3</span>
-            <button class="compare-btn" id="btnCompare" onclick="openCompare()" disabled>⚖️ So sánh</button>
-            <button class="compare-clear-btn" id="btnClearCompare" onclick="clearCompare()" style="display:none">✕ Xóa</button>
+
+        <div class="sidebar-section">
+            <div class="section-title">Dịch vụ & Hỗ trợ</div>
+            <div class="action-grid" style="grid-template-columns: 1fr;">
+                <a href="subscriptions.html" style="text-decoration:none">
+                    <button class="action-btn" style="width:100%;text-align:left;justify-content:flex-start">🎟️ Vé / Gói Đăng ký</button>
+                </a>
+                <a href="support.html" style="text-decoration:none; margin-top:8px; display:block">
+                    <button class="action-btn" style="width:100%;text-align:left;justify-content:flex-start">🎧 Trợ giúp & Báo cáo</button>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-footer">
+        <a href="wallet.html" style="text-decoration:none; flex: 1;">
+            <button id="btnWallet" class="wallet-btn">
+                💳 <span id="topbarWalletBalance">0đ</span>
+            </button>
+        </a>
+        <div class="notif-wrapper" style="position:relative;">
+            <button class="notif-btn" onclick="toggleNotif()" style="background:transparent;border:none;font-size:20px;cursor:pointer;position:relative;margin-right:10px;">
+                🔔<span class="notif-badge" id="notifBadge" style="display:none;position:absolute;top:-5px;right:-5px;background:red;color:white;font-size:10px;border-radius:50%;padding:2px 5px;font-weight:bold;">0</span>
+            </button>
+            <div class="notif-dropdown" id="notifDropdown" style="display:none;position:absolute;bottom:40px;right:0;width:280px;background:white;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.1);z-index:100;overflow:hidden;">
+                <div style="padding:12px;font-weight:bold;border-bottom:1px solid #E2E8F0;background:#F8FAFC;">Thông báo</div>
+                <div id="notifList" style="max-height:300px;overflow-y:auto;font-size:13px;color:#1E293B;">
+                    <div style="padding:15px;text-align:center;color:#64748B;">Đang tải...</div>
+                </div>
+            </div>
+        </div>
+        <div class="user-chip" id="userChip">
+            <a href="profile.html" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:6px" title="Quản lý hồ sơ">
+                <span id="userNameDisplay">Loading...</span>
+            </a>
+            <button onclick="doLogout()" title="Đăng xuất">↩</button>
         </div>
     </div>
 </div>
@@ -160,8 +208,15 @@
                 <div class="modal-err" id="modalErr">Vui lòng nhập họ tên</div>
             </div>
             <div class="modal-field">
-                <label>Số điện thoại (tùy chọn)</label>
-                <input type="tel" id="modalPhone" placeholder="0901234567" class="modal-input">
+                <label>Số điện thoại (Tùy chọn)</label>
+                <input type="text" id="modalPhone" placeholder="09xxxxxxxx" class="modal-input">
+            </div>
+            <div class="modal-field">
+                <label>Phương tiện <a href="profile.html" style="font-size:12px;float:right;color:var(--blue);text-decoration:none">+ Thêm xe</a></label>
+                <select id="modalVehicle" class="modal-input" style="appearance:auto; cursor:pointer">
+                    <option value="">-- Chọn phương tiện --</option>
+                </select>
+                <div class="modal-err" id="modalVehicleErr" style="display:none; color:var(--red); font-size:12px; margin-top:4px;">Vui lòng chọn phương tiện</div>
             </div>
             <div class="modal-field">
                 <label>Thời gian đặt chỗ (giờ)</label>
@@ -252,6 +307,16 @@
                     <div class="pmc-check">✓</div>
                 </div>
 
+                <!-- Wallet -->
+                <div class="pay-method-card" id="method-wallet" onclick="selectMethod('wallet')">
+                    <div class="pmc-icon bank-icon" style="background:var(--green);color:white">💳</div>
+                    <div class="pmc-info">
+                        <div class="pmc-name">Ví ParkFinder</div>
+                        <div class="pmc-desc" id="modalWalletBalance">Số dư: 0đ</div>
+                    </div>
+                    <div class="pmc-check">✓</div>
+                </div>
+
                 <!-- Cash -->
                 <div class="pay-method-card" id="method-cash" onclick="selectMethod('cash')">
                     <div class="pmc-icon cash-icon">💵</div>
@@ -308,6 +373,34 @@
         <div class="processing-sub">Vui lòng không đóng trang...</div>
         <div class="processing-progress">
             <div class="pp-bar"></div>
+        </div>
+    </div>
+</div>
+
+<!-- REVIEW MODAL -->
+<div id="reviewModal" class="modal-overlay">
+    <div class="modal-box" style="max-width:380px;">
+        <div class="modal-header">
+            <div class="modal-icon" style="background:rgba(249,115,22,0.1);color:var(--orange)">⭐</div>
+            <h2 class="modal-title">Đánh giá bãi xe</h2>
+            <button class="modal-close" onclick="closeReviewModal()">✕</button>
+        </div>
+        <div class="modal-body" style="text-align:center;">
+            <div style="font-weight:700;margin-bottom:8px;font-size:16px" id="revParkName">Bãi xe</div>
+            <div style="color:var(--muted);font-size:13px;margin-bottom:20px;">Bạn cảm thấy trải nghiệm gửi xe thế nào?</div>
+            
+            <div class="star-rating" style="font-size:32px;cursor:pointer;margin-bottom:16px;">
+                <span data-val="1" onclick="setReviewStar(1)" style="color:#e2e8f0;transition:0.2s">★</span>
+                <span data-val="2" onclick="setReviewStar(2)" style="color:#e2e8f0;transition:0.2s">★</span>
+                <span data-val="3" onclick="setReviewStar(3)" style="color:#e2e8f0;transition:0.2s">★</span>
+                <span data-val="4" onclick="setReviewStar(4)" style="color:#e2e8f0;transition:0.2s">★</span>
+                <span data-val="5" onclick="setReviewStar(5)" style="color:#e2e8f0;transition:0.2s">★</span>
+            </div>
+            
+            <textarea id="revComment" class="modal-input" placeholder="Chia sẻ thêm cảm nhận của bạn (tùy chọn)..." style="height:80px;resize:none;padding:12px;"></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn-confirm" onclick="submitReview()" style="width:100%">Gửi đánh giá</button>
         </div>
     </div>
 </div>
