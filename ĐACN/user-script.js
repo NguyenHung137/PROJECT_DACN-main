@@ -313,6 +313,38 @@ function loadUserMarkers() {
 let bookingParkId = null;
 let bookingDuration = 1;
 const PRICE_PER_HOUR = 20000;
+let activeDiscountRate = 1.0; // 1.0 = no discount, 0.5 = 50% off
+let activeSubInfo = null; // {passType, parkingLotId}
+
+async function checkSubscriptionDiscount(parkId) {
+    const userName = sessionStorage.getItem('userName');
+    if (!userName) { activeDiscountRate = 1.0; activeSubInfo = null; return; }
+    try {
+        const res = await fetch(`http://localhost:8080/api/subscriptions/user/${userName}`);
+        const subs = await res.json();
+        const now = new Date();
+        // Find active subscription for this parking lot
+        const match = subs.find(s =>
+            s.status === 'ACTIVE' &&
+            String(s.parkingLotId) === String(parkId) &&
+            new Date(s.endDate) > now
+        );
+        if (match) {
+            activeSubInfo = match;
+            activeDiscountRate = match.passType === 'MONTHLY' ? 0.5 : 0.7; // 50% or 30% off
+        } else {
+            activeDiscountRate = 1.0;
+            activeSubInfo = null;
+        }
+    } catch(e) {
+        activeDiscountRate = 1.0;
+        activeSubInfo = null;
+    }
+}
+
+function getEffectivePrice() {
+    return Math.round(PRICE_PER_HOUR * activeDiscountRate);
+}
 
 function changeDuration(delta) {
     bookingDuration = Math.max(1, Math.min(24, bookingDuration + delta));
@@ -328,15 +360,32 @@ function changeDuration(delta) {
 }
 
 function updateAmountDisplay() {
-    const total = bookingDuration * PRICE_PER_HOUR;
-    document.getElementById('totalAmount').textContent = total.toLocaleString('vi-VN') + ' VNĐ';
+    const effectivePrice = getEffectivePrice();
+    const total = bookingDuration * effectivePrice;
+    const amountEl = document.getElementById('totalAmount');
+    amountEl.textContent = total.toLocaleString('vi-VN') + ' VNĐ';
+    // Show discount badge if applicable
+    let badge = document.getElementById('discountBadge');
+    if (activeDiscountRate < 1.0) {
+        const pct = Math.round((1 - activeDiscountRate) * 100);
+        if (!badge) {
+            badge = document.createElement('div');
+            badge.id = 'discountBadge';
+            badge.style.cssText = 'background:#10B981;color:white;font-size:12px;font-weight:bold;padding:4px 10px;border-radius:50px;margin-top:4px;display:inline-block;';
+            amountEl.insertAdjacentElement('afterend', badge);
+        }
+        badge.textContent = `🎟️ Gói ${activeSubInfo?.passType === 'MONTHLY' ? 'Tháng' : 'Tuần'} – Giảm ${pct}% (${effectivePrice.toLocaleString('vi-VN')} VNĐ/giờ)`;
+    } else if (badge) {
+        badge.remove();
+    }
 }
 
-function openBookingModal(parkId, parkName) {
+async function openBookingModal(parkId, parkName) {
     bookingParkId = parkId;
     bookingDuration = 1;
+    activeDiscountRate = 1.0;
+    activeSubInfo = null;
     document.getElementById('durValue').textContent = '1';
-    updateAmountDisplay();
     document.getElementById('modalParkName').textContent = parkName;
     document.getElementById('modalParkId').textContent = '#' + parkId;
     document.getElementById('modalUserName').value = CURRENT_USER !== 'Khách' ? CURRENT_USER : '';
@@ -356,6 +405,10 @@ function openBookingModal(parkId, parkName) {
         });
         if (vehicles.length > 0) vSelect.selectedIndex = 1;
     } catch(e) {}
+    
+    // Check for active subscription discount
+    await checkSubscriptionDiscount(parkId);
+    updateAmountDisplay();
     
     document.getElementById('modalErr').classList.remove('show');
     document.getElementById('modalVehicleErr').style.display = 'none';
@@ -404,13 +457,21 @@ let selectedPayMethod = 'vnpay-qr';
 
 function openPaymentModal() {
     const parkName = document.getElementById('modalParkName').textContent;
-    const total = bookingDuration * PRICE_PER_HOUR;
+    const effectivePrice = getEffectivePrice();
+    const total = bookingDuration * effectivePrice;
     const totalStr = total.toLocaleString('vi-VN') + ' VNĐ';
 
     document.getElementById('paySubtitle').textContent = `${parkName} · ${bookingDuration} giờ`;
     document.getElementById('payAmountDisplay').textContent = totalStr;
-    document.getElementById('payAmountDesc').textContent =
-        `${PRICE_PER_HOUR.toLocaleString('vi-VN')} VNĐ × ${bookingDuration} giờ`;
+    // Show original vs discounted price in description
+    if (activeDiscountRate < 1.0) {
+        const pct = Math.round((1 - activeDiscountRate) * 100);
+        document.getElementById('payAmountDesc').textContent =
+            `🎟️ Giá gốc ${PRICE_PER_HOUR.toLocaleString('vi-VN')} VNĐ → Giảm ${pct}%: ${effectivePrice.toLocaleString('vi-VN')} VNĐ × ${bookingDuration} giờ`;
+    } else {
+        document.getElementById('payAmountDesc').textContent =
+            `${PRICE_PER_HOUR.toLocaleString('vi-VN')} VNĐ × ${bookingDuration} giờ`;
+    }
     document.getElementById('payFooterAmount').textContent = totalStr;
 
     // Load wallet balance
@@ -474,7 +535,8 @@ async function processPayment() {
     const name = document.getElementById('modalUserName').value.trim();
     const phoneEl = document.getElementById('modalPhone');
     const phone = phoneEl ? phoneEl.value.trim() : '';
-    const total = bookingDuration * PRICE_PER_HOUR;
+    const effectivePrice = getEffectivePrice();
+    const total = bookingDuration * effectivePrice;
 
     const btn = document.getElementById('paySubmitBtn');
     btn.classList.add('loading');

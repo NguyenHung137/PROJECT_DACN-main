@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkFinder – Quản lý Yêu cầu hỗ trợ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy:#0A1628; --blue:#2563EB; --blue2:#3B82F6;
+            --orange:#F97316; --green:#10B981; --red:#EF4444;
+            --light:#F8FAFC; --text:#1E293B; --muted:#64748B; --border:#E2E8F0;
+        }
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'Be Vietnam Pro',sans-serif;background:var(--light);color:var(--text);min-height:100vh;}
+
+        .topbar{background:var(--navy);color:white;padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:64px;box-shadow:0 2px 20px rgba(10,22,40,0.3);}
+        .tb-left{display:flex;align-items:center;gap:20px;}
+        .back-btn{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:14px;font-weight:500;padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);transition:all .2s;}
+        .back-btn:hover{background:rgba(255,255,255,0.1);color:white;}
+        .tb-brand{font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;}
+        .tb-brand span{color:var(--orange);}
+
+        .main{max-width:1200px;margin:40px auto;padding:0 24px;}
+        
+        .card{background:white;border-radius:16px;border:1px solid var(--border);overflow:hidden;}
+        .card-header{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid var(--border);background:var(--light);}
+        .card-title{font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;color:var(--navy);}
+        
+        .search-box{padding:8px 16px;border:1px solid var(--border);border-radius:8px;font-family:inherit;width:300px;}
+        .search-box:focus{outline:none;border-color:var(--blue);}
+
+        .tbl{width:100%;border-collapse:collapse;}
+        .tbl th{text-align:left;padding:12px 24px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);background:#F8FAFC;}
+        .tbl td{padding:16px 24px;border-bottom:1px solid var(--light);font-size:14px;vertical-align:top;}
+        .tbl tr:hover td{background:#f8fafc;}
+
+        .status-badge{display:inline-block;padding:4px 10px;border-radius:50px;font-size:12px;font-weight:bold;}
+        .status-OPEN{background:rgba(249,115,22,0.1);color:var(--orange);}
+        .status-CLOSED{background:rgba(16,185,129,0.1);color:var(--green);}
+
+        .action-select {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            font-family: inherit;
+            cursor: pointer;
+            background: white;
+            color: var(--navy);
+            transition: all 0.2s;
+        }
+        .action-select:focus {
+            outline: none;
+            border-color: var(--blue);
+        }
+        
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="tb-left">
+        <a href="dashboard.html" class="back-btn">← Quay lại Dashboard</a>
+        <div class="tb-brand">Park<span>Finder</span></div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">🎧 Quản lý Yêu cầu hỗ trợ</div>
+            <input type="text" id="searchTicket" class="search-box" placeholder="🔍 Tìm kiếm theo tên hoặc chủ đề..." oninput="filterTickets()">
+        </div>
+        <table class="tbl">
+            <thead>
+                <tr>
+                    <th>Ngày gửi</th>
+                    <th>Người dùng</th>
+                    <th>Chủ đề</th>
+                    <th style="width: 30%;">Nội dung</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="ticketList">
+                <tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted)">Đang tải...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+if (sessionStorage.getItem('adminLoggedIn') !== 'true') window.location.href = 'login.html?role=admin';
+
+let allTickets = [];
+
+async function loadTickets() {
+    try {
+        const res = await fetch('http://localhost:8080/api/support/all');
+        allTickets = await res.json();
+        renderTickets(allTickets);
+    } catch(err) {
+        document.getElementById('ticketList').innerHTML = '<tr><td colspan="6" style="text-align:center;color:red;">Lỗi kết nối</td></tr>';
+    }
+}
+
+function renderTickets(tickets) {
+    const tbody = document.getElementById('ticketList');
+    if (!tickets.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);">Chưa có yêu cầu hỗ trợ nào</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = tickets.map(t => {
+        const statusClass = 'status-' + t.status;
+        const statusText = t.status === 'OPEN' ? 'Đang xử lý' : 'Đã giải quyết';
+        
+        return `
+            <tr>
+                <td style="color:var(--muted);font-size:13px">${new Date(t.createdAt).toLocaleString('vi-VN')}</td>
+                <td style="font-weight:bold;color:var(--navy)">${t.userName}</td>
+                <td style="font-weight:600">${t.subject}</td>
+                <td><div style="background:#f1f5f9;padding:10px;border-radius:6px;font-size:13px;max-height:80px;overflow-y:auto;">${t.message}</div></td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                <td>
+                    <select class="action-select" onchange="updateStatus(${t.id}, this.value)">
+                        <option value="OPEN" ${t.status === 'OPEN' ? 'selected' : ''}>Mở (Đang xử lý)</option>
+                        <option value="CLOSED" ${t.status === 'CLOSED' ? 'selected' : ''}>Đóng (Đã giải quyết)</option>
+                    </select>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function filterTickets() {
+    const q = document.getElementById('searchTicket').value.toLowerCase();
+    const filtered = allTickets.filter(t => 
+        (t.userName || '').toLowerCase().includes(q) || 
+        (t.subject || '').toLowerCase().includes(q) ||
+        (t.message || '').toLowerCase().includes(q)
+    );
+    renderTickets(filtered);
+}
+
+async function updateStatus(id, newStatus) {
+    try {
+        const res = await fetch(`http://localhost:8080/api/support/${id}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+        if (res.ok) {
+            loadTickets(); // reload to reflect changes
+        } else {
+            alert('Có lỗi xảy ra khi cập nhật trạng thái');
+            loadTickets(); // reload to revert change
+        }
+    } catch(err) {
+        alert('Lỗi kết nối');
+        loadTickets();
+    }
+}
+
+loadTickets();
+</script>
+</body>
+</html>
